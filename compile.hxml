@@ -1,0 +1,9 @@
+-js bin/background.js
+-main Background
+-cp src
+
+--next
+
+-js bin/option.js
+-main Option
+-cp src
