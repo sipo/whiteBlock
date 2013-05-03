@@ -1,4 +1,5 @@
 package ;
+import chrome.Tabs;
 class Background 
 {
 	
@@ -7,10 +8,21 @@ class Background
 	 */
 	public static function main():Void
 	{
-		js.Lib.alert("ok");
+//		chrome.remoting.tabs.onUpdated.addListener(
+//			function(tabId, changedInfo, tab){
+//				js.Lib.alert("ok");
+//			}
+//		);
+		Tabs.onUpdated.addListener(function (tabId, changedInfo, tab){
+			js.Lib.alert("ok");
+		});
 	}
 	
+	/**
+	 * コンストラクタ
+	 */
 	public function new()
 	{
+		
 	}
 }

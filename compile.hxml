@@ -1,21 +1,25 @@
 -js bin/background.js
 -main Background
 -cp src
+-lib chrome-extension
 
 --next
 
 -js bin/option.js
 -main Option
 -cp src
+-lib chrome-extension
 
 --next
 
 -js bin/popup.js
 -main Popup
 -cp src
+-lib chrome-extension
 
 --next
 
 -js bin/block.js
 -main Block
 -cp src
+-lib chrome-extension
