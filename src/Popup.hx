@@ -1,7 +1,5 @@
 package ;
-class Background 
-{
-	
+class Popup {
 	/**
 	 * 起点
 	 */
@@ -10,6 +8,9 @@ class Background
 		js.Lib.alert("ok");
 	}
 	
+	/**
+	 * コンストラクタ
+	 */
 	public function new()
 	{
 	}

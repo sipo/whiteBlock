@@ -9,6 +9,9 @@ class Option {
 		js.Lib.alert("ok");
 	}
 	
+	/**
+	 * コンストラクタ
+	 */
 	public function new()
 	{
 	}

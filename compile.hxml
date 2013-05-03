@@ -7,3 +7,15 @@
 -js bin/option.js
 -main Option
 -cp src
+
+--next
+
+-js bin/popup.js
+-main Popup
+-cp src
+
+--next
+
+-js bin/block.js
+-main Block
+-cp src
