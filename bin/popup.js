@@ -3,7 +3,8 @@ var Popup = function() {
 };
 Popup.__name__ = true;
 Popup.main = function() {
-	js.Lib.alert("ok");
+	js.Lib.alert("okPopup");
+	console.log("okPopup");
 }
 var js = {}
 js.Boot = function() { }

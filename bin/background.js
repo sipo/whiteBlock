@@ -1,11 +1,22 @@
 (function () { "use strict";
 var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
-	chrome.tabs.onUpdated.addListener(function(tabId,changedInfo,tab) {
-	});
+	this.tabs = chrome.tabs;
+	console.log("ok3");
+	console.log(chrome.tabs);
+	console.log(chrome.tabs);
+	this.run();
 };
 Background.main = function() {
 	Background.background = new Background();
+	console.log("ok1");
+	console.log(chrome.tabs);
+}
+Background.prototype = {
+	run: function() {
+		console.log("ok4");
+		console.log(chrome.tabs);
+	}
 }
 var chrome = {}
 chrome.CaptureFormat = { __constructs__ : ["jpeg","png"] }

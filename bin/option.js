@@ -3,7 +3,8 @@ var Option = function() {
 };
 Option.__name__ = true;
 Option.main = function() {
-	js.Lib.alert("ok");
+	js.Lib.alert("okOption");
+	console.log("okOption");
 }
 var js = {}
 js.Boot = function() { }
