@@ -2,20 +2,14 @@ package ;
 import chrome.Tabs;
 class Background 
 {
+	private static var background:Background;
 	
 	/**
 	 * 起点
 	 */
 	public static function main():Void
 	{
-//		chrome.remoting.tabs.onUpdated.addListener(
-//			function(tabId, changedInfo, tab){
-//				js.Lib.alert("ok");
-//			}
-//		);
-		Tabs.onUpdated.addListener(function (tabId, changedInfo, tab){
-			js.Lib.alert("ok");
-		});
+		background = new Background();
 	}
 	
 	/**
@@ -23,6 +17,9 @@ class Background
 	 */
 	public function new()
 	{
-		
+		Tabs.onUpdated.addListener(function (tabId, changedInfo, tab){
+//			Tabs.update(tabId, {"url":ext});
+		});
+//		Extension.
 	}
 }
