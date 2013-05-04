@@ -50,6 +50,7 @@ class Background
 			return;
 		}
 		// ページをブロックする
+		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	
@@ -59,6 +60,14 @@ class Background
 	private function afterBlock(tab:Tab):Void
 	{
 		trace("afterBlock");
-//		Tabs.sendMessage(tab.id, );
+		Tabs.sendMessage(tab.id, {}, blockCallback);
+	}
+	
+	/*
+	 * ブロックからのコールバック
+	 */
+	private function blockCallback(message:Dynamic):Void
+	{
+		trace("blockCallback");
 	}
 }

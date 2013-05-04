@@ -10,6 +10,7 @@
 -main Option
 -cp src
 -lib chrome-extension
+-D js-classic
 
 --next
 
@@ -17,6 +18,7 @@
 -main Popup
 -cp src
 -lib chrome-extension
+-D js-classic
 
 --next
 
@@ -24,3 +26,4 @@
 -main Block
 -cp src
 -lib chrome-extension
+-D js-classic

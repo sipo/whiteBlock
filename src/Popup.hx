@@ -5,7 +5,6 @@ class Popup {
 	 */
 	public static function main():Void
 	{
-		js.Lib.alert("okPopup");
 		trace("okPopup");
 	}
 	

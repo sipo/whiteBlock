@@ -1,4 +1,3 @@
-(function () { "use strict";
 var Popup = function() {
 };
 Popup.__name__ = true;
@@ -6,7 +5,7 @@ Popup.main = function() {
 	js.Lib.alert("okPopup");
 	console.log("okPopup");
 }
-var js = {}
+var js = js || {}
 js.Boot = function() { }
 js.Boot.__name__ = true;
 js.Boot.__string_rec = function(o,s) {
@@ -83,4 +82,3 @@ js.Lib.alert = function(v) {
 String.__name__ = true;
 Array.__name__ = true;
 Popup.main();
-})();

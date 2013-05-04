@@ -1,4 +1,3 @@
-(function () { "use strict";
 var Option = function() {
 };
 Option.__name__ = true;
@@ -6,7 +5,7 @@ Option.main = function() {
 	js.Lib.alert("okOption");
 	console.log("okOption");
 }
-var js = {}
+var js = js || {}
 js.Boot = function() { }
 js.Boot.__name__ = true;
 js.Boot.__string_rec = function(o,s) {
@@ -83,4 +82,3 @@ js.Lib.alert = function(v) {
 String.__name__ = true;
 Array.__name__ = true;
 Option.main();
-})();

@@ -6,7 +6,6 @@ class Option {
 	 */
 	public static function main():Void
 	{
-		js.Lib.alert("okOption");
 		trace("okOption");
 	}
 	

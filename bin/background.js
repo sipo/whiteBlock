@@ -6,20 +6,24 @@ Background.main = function() {
 	Background.background = new Background();
 }
 Background.prototype = {
-	afterBlock: function(tab) {
+	blockCallback: function(message) {
+		console.log("blockCallback");
+	}
+	,afterBlock: function(tab) {
 		console.log("afterBlock");
+		chrome.tabs.sendMessage(tab.id,{ },$bind(this,this.blockCallback));
 	}
 	,tab_updated: function(tabId,changedInfo,tab) {
 		console.log("tab_updated");
 		console.log(tab.url);
 		var blockUrl = chrome.extension.getURL("block.html");
 		if(tab.url == blockUrl) {
-			console.log("is block page");
+			console.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
 		var isWeb = new EReg("^(http:)|(https:)","");
 		if(!isWeb.match(tab.url)) {
-			console.log("is not web");
+			console.log("webページじゃない場合除外");
 			return;
 		}
 		if(tab.url != "http://b.hatena.ne.jp/tail_y/") {

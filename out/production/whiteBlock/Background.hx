@@ -37,20 +37,20 @@ class Background
 		var blockUrl:String = Extension.getURL("block.html");
 		// 除外処理
 		if (tab.url == blockUrl){
-			trace("is block page");
+			trace("ブロックページなので循環を防ぐために除外");
 			return;
 		}
-		
 		var isWeb:EReg = ~/^(http:)|(https:)/;
 		if (!isWeb.match(tab.url)){
-			trace("is not web");
+			trace("webページじゃない場合除外");	// あとで、httpsはオプション設定にするべきかも
 			return;
 		}
 		if (tab.url != "http://b.hatena.ne.jp/tail_y/"){
-			trace("is not test");
+			trace("is not test");	// とりあえずテストページに限定する
 			return;
 		}
 		// ページをブロックする
+		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	
@@ -60,6 +60,14 @@ class Background
 	private function afterBlock(tab:Tab):Void
 	{
 		trace("afterBlock");
-//		Tabs.sendMessage(tab.id, );
+		Tabs.sendMessage(tab.id, {}, blockCallback);
+	}
+	
+	/*
+	 * ブロックからのコールバック
+	 */
+	private function blockCallback(message:Dynamic):Void
+	{
+		trace("blockCallback");
 	}
 }
