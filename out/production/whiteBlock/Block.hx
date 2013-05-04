@@ -1,5 +1,7 @@
 package ;
+import js.html.DOMWindow;
 import js.html.Storage;
+import js.Browser;
 import chrome.MessageSender;
 import chrome.Extension;
 class Block
@@ -20,7 +22,8 @@ class Block
 	public function new()
 	{
 		trace("constractor block.js");
-		var storage:Storage = untyped __js__("window.localStorage");
+		var window:DOMWindow = Browser.window;
+		var storage:Storage = window.localStorage;
 		trace(storage.getItem("checkData"));
 //		Extension.onRequest.addListener(extension_request);
 	}

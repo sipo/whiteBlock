@@ -29,6 +29,7 @@ Background.prototype = {
 			console.log("is not test");
 			return;
 		}
+		var window = js.Browser.window;
 		var storage = window.localStorage;
 		storage.setItem("checkData","sadbgf");
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
@@ -95,9 +96,11 @@ chrome.WindowState.maximized = ["maximized",2];
 chrome.WindowState.maximized.toString = $estr;
 chrome.WindowState.maximized.__enum__ = chrome.WindowState;
 var js = js || {}
+js.Browser = function() { }
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
 var q = window.jQuery;
 js.JQuery = q;
 Background.tabs = chrome.tabs;
+js.Browser.window = typeof window != "undefined" ? window : null;
 Background.main();

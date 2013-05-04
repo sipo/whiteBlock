@@ -1,7 +1,9 @@
 package ;
+import js.Lib;
 import js.html.Storage;
 import js.html.DOMWindow;
 import js.JQuery;
+import js.Browser;
 import chrome.Tab;
 import String;
 import chrome.Extension;
@@ -52,7 +54,9 @@ class Background
 			return;
 		}
 		// 
-		var storage:Storage = untyped __js__("window.localStorage");
+		
+		var window:DOMWindow = Browser.window;
+		var storage:Storage = window.localStorage;
 		storage.setItem("checkData", "sadbgf");
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
