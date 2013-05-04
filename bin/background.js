@@ -1,14 +1,45 @@
 var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
-	chrome.tabs.onUpdated.addListener(function(tabId,changedInfo,tab) {
-		var blockUrl = chrome.extension.getURL("block.html");
-		if(tab.url == blockUrl) return;
-		chrome.tabs.update(tabId,{ url : blockUrl},function(tab1) {
-		});
-	});
+	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updated));
 };
 Background.main = function() {
 	Background.background = new Background();
+}
+Background.prototype = {
+	afterBlock: function(tab) {
+		console.log("afterBlock");
+	}
+	,tab_updated: function(tabId,changedInfo,tab) {
+		console.log("tab_updated");
+		console.log(tab.url);
+		var blockUrl = chrome.extension.getURL("block.html");
+		if(tab.url == blockUrl) {
+			console.log("is block page");
+			return;
+		}
+		var isWeb = new EReg("^(http:)|(https:)","");
+		if(!isWeb.match(tab.url)) {
+			console.log("is not web");
+			return;
+		}
+		if(tab.url != "http://b.hatena.ne.jp/tail_y/") {
+			console.log("is not test");
+			return;
+		}
+		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
+	}
+}
+var EReg = function(r,opt) {
+	opt = opt.split("u").join("");
+	this.r = new RegExp(r,opt);
+};
+EReg.prototype = {
+	match: function(s) {
+		if(this.r.global) this.r.lastIndex = 0;
+		this.r.m = this.r.exec(s);
+		this.r.s = s;
+		return this.r.m != null;
+	}
 }
 var chrome = chrome || {}
 chrome.CaptureFormat = { __constructs__ : ["jpeg","png"] }
@@ -58,5 +89,10 @@ chrome.WindowState.minimized.__enum__ = chrome.WindowState;
 chrome.WindowState.maximized = ["maximized",2];
 chrome.WindowState.maximized.toString = $estr;
 chrome.WindowState.maximized.__enum__ = chrome.WindowState;
+var js = js || {}
+var $_;
+function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
+var q = window.jQuery;
+js.JQuery = q;
 Background.tabs = chrome.tabs;
 Background.main();

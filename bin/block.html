@@ -1,8 +1,32 @@
-<html>
-  <head>
-    <script type="text/javascript" src="./block.js"></script>
-  </head>
-  <body>
-Block!
-  </body>
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <script type="text/javascript" src="./block.js"></script>
+    </head>
+    <body>
+        <h1>このページはWhiteLockによってブロックされました。</h1>
+        <p>以下から動作を選んで下さい。</p>
+        <ul>
+            <li>
+                <p><a href="#" id="addAfterList">あとで見るリストに追加する</a><small>（推奨）</small></p>
+                <p><small>ヒント：拡張機能のアイコンをクリックし、オプションページから見ることができます。</small></p>
+            </li>
+            <li>
+                <p><a href="#" id="unblock">少しだけブロックを解除する</a></p>
+                <label for="unblockTime">解除する時間</label>
+                <select id="unblockTime" name="unblockTime">
+                    <option value="5">5分</option>
+                    <option value="10">10分</option>
+                </select>
+                
+            </li>
+            <li>
+                <p><a href="#" id="addWhiteList">ホワイトリストに追加する</a></p>
+                <label for="addWhiteListText">追加する文字列</label>
+                <input type="text" id="addWhiteListText" value="">
+                <p><small>ヒント：ホワイトリストへの追加は慎重にしましょう。業務で何度も使用するようなページ以外は、「少しだけブロックを解除する」を利用するほうがいいでしょう。</small></p>
+            </li>
+        </ul>
+    </body>
 </html>
