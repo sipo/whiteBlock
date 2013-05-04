@@ -1,11 +1,13 @@
 package ;
+import chrome.Tab;
 import String;
 import chrome.Extension;
 import chrome.Tabs;
 class Background 
 {
 	public static var background:Background;
-	public var tabs:Class<Tabs> = Tabs;
+	public static var tabs:Class<Tabs> = untyped chrome.tabs;
+	
 	
 	/**
 	 * 起点
@@ -13,8 +15,6 @@ class Background
 	public static function main():Void
 	{
 		background = new Background();
-		trace("ok1");
-		trace(Tabs);
 	}
 	
 	/**
@@ -22,25 +22,13 @@ class Background
 	 */
 	public function new()
 	{
-		trace("ok3");
-		trace(Tabs);
-		trace(untyped chrome.tabs);
-//		Tabs.onUpdated.addListener(function (tabId, changedInfo, tab){
-////			js.Lib.alert("ok2");
-////			trace("ok2");
-//			var blockUrl:String = Extension.getURL("block.html");
-//			Tabs.update(tabId, {url:blockUrl}, function (tab:Tab) {});
-//		});
-		run();
+		Tabs.onUpdated.addListener(function (tabId:Int, changedInfo:UpdateInfo, tab:Tab){
+//			js.Lib.alert("ok2");
+//			trace("ok2");
+			var blockUrl:String = Extension.getURL("block.html");
+			if (tab.url == blockUrl) return;
+			Tabs.update(tabId, {url:blockUrl}, function (tab:Tab) {});
+		});
 	}
 	
-	/**
-	 * 動作
-	 */
-	public function run():Void
-	{
-		trace("ok4");
-		trace(Tabs);
-		
-	}
 }

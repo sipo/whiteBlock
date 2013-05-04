@@ -1,21 +1,14 @@
-﻿var $estr = function() { return js.Boot.__string_rec(this,''); };
+var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
-	this.tabs = chrome.tabs;
-	console.log("ok3");
-	console.log(chrome.tabs);
-	console.log(chrome.tabs);
-	this.run();
+	chrome.tabs.onUpdated.addListener(function(tabId,changedInfo,tab) {
+		var blockUrl = chrome.extension.getURL("block.html");
+		if(tab.url == blockUrl) return;
+		chrome.tabs.update(tabId,{ url : blockUrl},function(tab1) {
+		});
+	});
 };
 Background.main = function() {
 	Background.background = new Background();
-	console.log("ok1");
-	console.log(chrome.tabs);
-}
-Background.prototype = {
-	run: function() {
-		console.log("ok4");
-		console.log(chrome.tabs);
-	}
 }
 var chrome = chrome || {}
 chrome.CaptureFormat = { __constructs__ : ["jpeg","png"] }
@@ -65,6 +58,5 @@ chrome.WindowState.minimized.__enum__ = chrome.WindowState;
 chrome.WindowState.maximized = ["maximized",2];
 chrome.WindowState.maximized.toString = $estr;
 chrome.WindowState.maximized.__enum__ = chrome.WindowState;
+Background.tabs = chrome.tabs;
 Background.main();
-
-		console.log(chrome.tabs);
