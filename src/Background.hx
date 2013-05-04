@@ -1,4 +1,5 @@
 package ;
+import chrome.Extension;
 import chrome.Tabs;
 class Background 
 {
@@ -17,6 +18,7 @@ class Background
 	 */
 	public function new()
 	{
+//		Extension.getURL
 		Tabs.onUpdated.addListener(function (tabId, changedInfo, tab){
 //			Tabs.update(tabId, {"url":ext});
 		});
