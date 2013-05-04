@@ -1,4 +1,6 @@
 package ;
+import js.html.Storage;
+import js.html.DOMWindow;
 import js.JQuery;
 import chrome.Tab;
 import String;
@@ -49,6 +51,9 @@ class Background
 			trace("is not test");	// とりあえずテストページに限定する
 			return;
 		}
+		// 
+		var storage:Storage = untyped __js__("window.localStorage");
+		storage.setItem("checkData", "sadbgf");
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
@@ -60,7 +65,7 @@ class Background
 	private function afterBlock(tab:Tab):Void
 	{
 		trace("afterBlock");
-		Tabs.sendMessage(tab.id, {}, blockCallback);
+//		Tabs.sendMessage(tab.id, {}, blockCallback);
 	}
 	
 	/*

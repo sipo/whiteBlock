@@ -1,15 +1,13 @@
 var Block = function() {
 	console.log("constractor block.js");
-	chrome.extension.onRequest.addListener($bind(this,this.extension_request));
+	var storage = window.localStorage;
+	console.log(storage.getItem("checkData"));
 };
 Block.main = function() {
+	Block.mainInstance = new Block();
 }
 Block.prototype = {
 	extension_request: function(request,sender,sendResponse) {
-		console.log("extension_request");
-		sendResponse({ });
 	}
 }
-var $_;
-function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
 Block.main();

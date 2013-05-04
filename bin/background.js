@@ -11,7 +11,6 @@ Background.prototype = {
 	}
 	,afterBlock: function(tab) {
 		console.log("afterBlock");
-		chrome.tabs.sendMessage(tab.id,{ },$bind(this,this.blockCallback));
 	}
 	,tab_updated: function(tabId,changedInfo,tab) {
 		console.log("tab_updated");
@@ -30,6 +29,8 @@ Background.prototype = {
 			console.log("is not test");
 			return;
 		}
+		var storage = window.localStorage;
+		storage.setItem("checkData","sadbgf");
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 }

@@ -1,13 +1,17 @@
 package ;
+import js.html.Storage;
 import chrome.MessageSender;
 import chrome.Extension;
 class Block
 {
+	private static var mainInstance:Block;
+
 	/**
 	 * 起点
 	 */
 	public static function main():Void
 	{
+		mainInstance = new Block();
 	}
 	
 	/**
@@ -16,7 +20,9 @@ class Block
 	public function new()
 	{
 		trace("constractor block.js");
-		Extension.onRequest.addListener(extension_request);
+		var storage:Storage = untyped __js__("window.localStorage");
+		trace(storage.getItem("checkData"));
+//		Extension.onRequest.addListener(extension_request);
 	}
 	
 	/*
@@ -24,8 +30,8 @@ class Block
 	 */
 	private function extension_request(request:Dynamic, sender:MessageSender, sendResponse:Dynamic->Void):Void
 	{
-		trace("extension_request");
-		sendResponse({});
+//		trace("extension_request");
+//		sendResponse({});
 	}
 }
 
