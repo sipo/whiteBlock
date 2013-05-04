@@ -1,5 +1,4 @@
 package ;
-import chrome.Tab;
 import String;
 import chrome.Extension;
 import chrome.Tabs;

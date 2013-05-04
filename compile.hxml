@@ -2,6 +2,7 @@
 -main Background
 -cp src
 -lib chrome-extension
+-D js-classic
 
 --next
 

@@ -1,5 +1,4 @@
-(function () { "use strict";
-var $estr = function() { return js.Boot.__string_rec(this,''); };
+﻿var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
 	this.tabs = chrome.tabs;
 	console.log("ok3");
@@ -18,7 +17,7 @@ Background.prototype = {
 		console.log(chrome.tabs);
 	}
 }
-var chrome = {}
+var chrome = chrome || {}
 chrome.CaptureFormat = { __constructs__ : ["jpeg","png"] }
 chrome.CaptureFormat.jpeg = ["jpeg",0];
 chrome.CaptureFormat.jpeg.toString = $estr;
@@ -67,4 +66,5 @@ chrome.WindowState.maximized = ["maximized",2];
 chrome.WindowState.maximized.toString = $estr;
 chrome.WindowState.maximized.__enum__ = chrome.WindowState;
 Background.main();
-})();
+
+		console.log(chrome.tabs);
