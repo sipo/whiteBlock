@@ -56,8 +56,8 @@ class Background
 		// 
 		
 		var window:DOMWindow = Browser.window;
-		var storage:Storage = window.localStorage;
-		storage.setItem("checkData", "sadbgf");
+		var storage:Storage = window.sessionStorage;
+		storage.setItem("checkData", "sadbgfaa");
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);

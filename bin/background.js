@@ -30,8 +30,8 @@ Background.prototype = {
 			return;
 		}
 		var window = js.Browser.window;
-		var storage = window.localStorage;
-		storage.setItem("checkData","sadbgf");
+		var storage = window.sessionStorage;
+		storage.setItem("checkData","sadbgfaa");
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 }

@@ -50,7 +50,7 @@ class Background
 			return;
 		}
 		if (tab.url != "http://b.hatena.ne.jp/tail_y/"){
-			trace("is not test");	// とりあえずテストページに限定する
+			trace("テストページじゃない場合除外");	// とりあえずテストページに限定する
 			return;
 		}
 		// 
