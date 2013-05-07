@@ -23,7 +23,7 @@ class Block
 	{
 		trace("constractor block.js");
 		var window:DOMWindow = Browser.window;
-		var storage:Storage = window.sessionStorage;
+		var storage:Storage = window.localStorage;
 		trace(storage.getItem("checkData"));
 //		Extension.onRequest.addListener(extension_request);
 	}

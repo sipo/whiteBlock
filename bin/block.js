@@ -1,7 +1,7 @@
 var Block = function() {
 	console.log("constractor block.js");
 	var window = js.Browser.window;
-	var storage = window.sessionStorage;
+	var storage = window.localStorage;
 	console.log(storage.getItem("checkData"));
 };
 Block.main = function() {

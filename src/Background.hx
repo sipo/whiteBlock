@@ -11,8 +11,9 @@ import chrome.Tabs;
 class Background 
 {
 	public static var background:Background;
-	public static var tabs:Class<Tabs> = untyped chrome.tabs;
 	
+	/* データの扱い */
+	private var localStorageModel:LocalStorageModel;
 	
 	/**
 	 * 起点
