@@ -1,5 +1,7 @@
 package ;
 import Std;
+import String;
+import Std;
 import haxe.Json;
 import js.html.Storage;
 class LocalStorageDetail {
@@ -168,15 +170,15 @@ class LocalStorageDetail {
 		// TODO:
 		switch(key){
 			case LocalStorageKey.LAST_BLOCK_URL:
-				lastBlockUrl;
+				lastBlockUrl = storage.getItem(key);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
-				unblockTimeList;
+				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 				unblockTimeDefaultIndex;
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState;
 			case LocalStorageKey.WHITELIST:
-				whitelist;
+				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
 				whitelistUseRegexp;
 			case LocalStorageKey.BLACKLIST:
@@ -188,6 +190,17 @@ class LocalStorageDetail {
 			default :
 				throw "対応していない値です key=" + key;
 		}
+	}
+	/* Storageから、配列に変換して取得する */
+	private function getArrayFloat(key:String):Array<Float>
+	{
+		var list:Dynamic = Json.parse(storage.getItem(key));
+		return [for (i in 0...list.length) Std.parseFloat(list[i])];
+	}
+	/* Storageから、配列に変換して取得する */
+	private function getArrayString(key:String):Array<String>
+	{
+		return [];
 	}
 	
 	private function createDefault(key:String):Void

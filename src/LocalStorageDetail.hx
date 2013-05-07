@@ -1,5 +1,7 @@
 package ;
 import Std;
+import String;
+import Std;
 import haxe.Json;
 import js.html.Storage;
 class LocalStorageDetail {
@@ -165,29 +167,44 @@ class LocalStorageDetail {
 	/* キーに対応した値を、Storageからロードする */
 	private function loadData(key:String):Void
 	{
-		// TODO:
 		switch(key){
 			case LocalStorageKey.LAST_BLOCK_URL:
-				lastBlockUrl;
+				lastBlockUrl = storage.getItem(key);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
-				unblockTimeList;
+				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
-				unblockTimeDefaultIndex;
+				unblockTimeDefaultIndex = Std.parseInt(storage.getItem(key));
 			case LocalStorageKey.UNBLOCK_STATE:
-				unblockState;
+				unblockState = UnblockState.createFromJson(storage.getItem(key));
 			case LocalStorageKey.WHITELIST:
-				whitelist;
+				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
-				whitelistUseRegexp;
+				whitelistUseRegexp = getArrayBool(key);
 			case LocalStorageKey.BLACKLIST:
-				blacklist;
+				blacklist = getArrayString(key);
 			case LocalStorageKey.BLACKLIST_USE_REGEXP:
-				blacklistUseRegexp;
+				blacklistUseRegexp = getArrayBool(key);
 			case LocalStorageKey.LATER_LIST:
-				laterList;
+				laterList = getArrayString(key);
 			default :
 				throw "対応していない値です key=" + key;
 		}
+	}
+	/* Storageから、配列に変換して取得する */
+	private function getArrayFloat(key:String):Array<Float>
+	{
+		var list:Dynamic = Json.parse(storage.getItem(key));
+		return [for (i in 0...list.length) Std.parseFloat(list[i])];
+	}
+	/* Storageから、配列に変換して取得する */
+	private function getArrayString(key:String):Array<String>
+	{
+		return cast(Json.parse(storage.getItem(key)));
+	}
+	/* Storageから、Boolに変換して取得する */
+	private function getArrayBool(key:String):Bool
+	{
+		return storage.getItem(key) == "true";
 	}
 	
 	private function createDefault(key:String):Void

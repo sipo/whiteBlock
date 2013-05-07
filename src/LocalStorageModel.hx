@@ -17,6 +17,9 @@ class LocalStorageModel
 	/** 必ずデータをクリアするデバッグ挙動 */
 	public static inline var DEBUG_CLEAR_DATA:Bool = true;
 	
+	/* Storageデータに変更が合った場合に返すコールバック */
+	private var callbackStorageChange:String -> Void;
+	
 	/* ================================================================
 	 * 処理
 	 */
@@ -24,8 +27,9 @@ class LocalStorageModel
 	/**
 	 * コンストラクタ
 	 */
-	public function new()
+	public function new(callbackStorageChange:String -> Void)
 	{
+		this.callbackStorageChange = callbackStorageChange;
 		// ストレージを用意
 		var window:DOMWindow = Browser.window;
 		var storage:Storage = Browser.getLocalStorage();
@@ -73,6 +77,12 @@ class LocalStorageModel
 		trace("window_storage");
 		trace(event);
 		// TODO:
+		window_storage_(storageEvent.key);
+	}
+	private function window_storage_(key:String):Void
+	{
+		trace("window_storage_" + key)
+		if (callbackStorageChange != null) callbackStorageChange(key);
 	}
 	
 	/*
