@@ -1,4 +1,7 @@
 package ;
+import js.html.StorageEvent;
+import js.html.Event;
+import js.html.DOMWindow;
 import Std;
 import String;
 import Std;
@@ -11,6 +14,9 @@ class LocalStorageDetail {
 	
 	/** ストレージデータのバージョン（将来に備えて） */
 	public static inline var STORAGE_VERSION:Int = 1;
+	
+	/* イベントコールバック */
+	private var callbackStorageChange:String -> Void;
 	
 	/* ================================================================
 	 * 実データと、設定
@@ -223,6 +229,8 @@ class LocalStorageDetail {
 				];
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 				unblockTimeDefaultIndex = 2;
+			case LocalStorageKey.UNBLOCK_STATE:
+				unblockState = UnblockState.createDefault();
 			case LocalStorageKey.WHITELIST:
 				whitelist = [
 					"https://www.google.co.jp/search",
@@ -254,9 +262,10 @@ class LocalStorageDetail {
 	/**
 	 * コンストラクタ
 	 */
-	public function new(storage:Storage):Void
+	public function new(storage:Storage, window:DOMWindow):Void
 	{
 		this.storage = storage;
+		window.addEventListener("storage", window_storage);
 	}
 	
 	/**
@@ -288,4 +297,37 @@ class LocalStorageDetail {
 			loadData(key);
 		}
 	}
+	
+	/**
+	 * コールバックの設定
+	 */
+	public function setCallback(callbackStorageChange:String -> Void):Void
+	{
+		this.callbackStorageChange = callbackStorageChange;
+	}
+	
+	/*
+	 * ストレージ内容に変更があった場合の処理（このインスタンスで書き換えが合った場合も含む）
+	 */
+	private function window_storage(event:Event):Void
+	{
+		trace("window_storage " + event);
+		var storageEvent:StorageEvent = cast(event);
+		window_storage_(storageEvent.key);
+	}
+	private function window_storage_(key:String):Void
+	{
+		trace("window_storage_" + key);
+		if (callbackStorageChange != null) callbackStorageChange(key);
+	}
+	
+//	/*
+//	 * 全てのストレージの内容に変更があったというイベントを起動する
+//	 */
+//	public function callAllChangeStorage():Void
+//	{
+//		for (key in LocalStorageKey.KEY_LIST()) {
+//			window_storage_(key);
+//		}
+//	}
 }

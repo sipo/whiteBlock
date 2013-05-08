@@ -22,9 +22,17 @@ class UnblockState
 	}
 	
 	/**
+	 * 初期値を生成
+	 */
+	public static function createDefault():UnblockState
+	{
+		return new UnblockState();
+	}
+	
+	/**
 	 * Jsonからインスタンスを生成
 	 */
-	public static function createFromJson(jsonData:Dynamic):Void
+	public static function createFromJson(jsonData:Dynamic):UnblockState
 	{
 		var ans:UnblockState = new UnblockState();
 		ans.isUnblock = jsonData.isUnblock == "true";

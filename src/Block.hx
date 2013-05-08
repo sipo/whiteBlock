@@ -8,6 +8,9 @@ class Block
 {
 	private static var mainInstance:Block;
 
+	/* データの扱い */
+	private var localStorageDetail:LocalStorageDetail;
+	
 	/**
 	 * 起点
 	 */
@@ -21,20 +24,16 @@ class Block
 	 */
 	public function new()
 	{
-		trace("constractor block.js");
-		var window:DOMWindow = Browser.window;
-		var storage:Storage = window.localStorage;
-		trace(storage.getItem("checkData"));
-//		Extension.onRequest.addListener(extension_request);
+		var factory:LocalStorageFactory = new LocalStorageFactory();
+		localStorageDetail = factory.create(storage_change);
 	}
 	
 	/*
-	 * comment
+	 * ストレージデータの変更時
 	 */
-	private function extension_request(request:Dynamic, sender:MessageSender, sendResponse:Dynamic->Void):Void
+	private function storage_change(key:String):Void
 	{
-//		trace("extension_request");
-//		sendResponse({});
+		// 特になし
 	}
 }
 

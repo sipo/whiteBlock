@@ -13,7 +13,7 @@ class Background
 	public static var background:Background;
 	
 	/* データの扱い */
-	private var localStorageModel:LocalStorageModel;
+	private var localStorageDetail:LocalStorageDetail;
 	
 	/**
 	 * 起点
@@ -28,7 +28,17 @@ class Background
 	 */
 	public function new()
 	{
+		var factory:LocalStorageFactory = new LocalStorageFactory();
+		localStorageDetail = factory.create(storage_change);
 		Tabs.onUpdated.addListener(tab_updated);
+	}
+	
+	/*
+	 * ストレージデータの変更時
+	 */
+	private function storage_change(key:String):Void
+	{
+		// 特になし
 	}
 	
 	/*

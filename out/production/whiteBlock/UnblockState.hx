@@ -1,4 +1,5 @@
 package ;
+import Std;
 class UnblockState 
 {
 	/** アンブロック中かどうか */
@@ -15,7 +16,29 @@ class UnblockState
 	 */
 	public function new()
 	{
-		
+		isUnblock = false;
+		startUnblockTime = 0;
+		unblockTime = 0;
+	}
+	
+	/**
+	 * 初期値を生成
+	 */
+	public static function createDefault():UnblockState
+	{
+		return new UnblockState();
+	}
+	
+	/**
+	 * Jsonからインスタンスを生成
+	 */
+	public static function createFromJson(jsonData:Dynamic):UnblockState
+	{
+		var ans:UnblockState = new UnblockState();
+		ans.isUnblock = jsonData.isUnblock == "true";
+		ans.startUnblockTime = Std.parseFloat(jsonData.startUnblockTime);
+		ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
+		return ans;
 	}
 	
 	/**

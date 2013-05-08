@@ -5,21 +5,21 @@ import js.Browser;
 import js.html.StorageEvent;
 import js.html.Storage;
 import js.html.DOMWindow;
-class LocalStorageModel 
+/**
+ * storageDetailの準備と、storageイベントの通知を担当する
+ * Viewからここを経由して値を参照するのはOK
+ * 
+ * @author sipo
+ */
+class LocalStorageFactory 
 {
 	/* ================================================================
 	 * 基本変数
 	 */
 	
-	/* 実際に保存を行うストレージ */
-	private var storageDetail:LocalStorageDetail;
-	
 	/** 必ずデータをクリアするデバッグ挙動 */
 	public static inline var DEBUG_CLEAR_DATA:Bool = true;
-	
-	/* Storageデータに変更が合った場合に返すコールバック */
-	private var callbackStorageChange:String -> Void;
-	
+ 
 	/* ================================================================
 	 * 処理
 	 */
@@ -27,13 +27,17 @@ class LocalStorageModel
 	/**
 	 * コンストラクタ
 	 */
-	public function new(callbackStorageChange:String -> Void)
+	public function new()
 	{
-		this.callbackStorageChange = callbackStorageChange;
+	}
+	
+	/**
+	 * detailの生成
+	 */
+	public function create(callbackStorageChange:String -> Void):LocalStorageDetail
+	{
 		// ストレージを用意
-		var window:DOMWindow = Browser.window;
-		var storage:Storage = Browser.getLocalStorage();
-		storageDetail = new LocalStorageDetail(storage);
+		var storageDetail:LocalStorageDetail = new LocalStorageDetail(Browser.getLocalStorage(), Browser.window);
 		// データの初期化などが起きた場合のフラグ
 		var isFirstChange:Bool = false;
 		// データバージョンを取得
@@ -62,34 +66,11 @@ class LocalStorageModel
 		// 値をロードする
 		storageDetail.loadAllValue();
 		// イベント登録
-		window.addEventListener("storage", window_storage);
+		storageDetail.setCallback(callbackStorageChange);
 		// データの初期化があったのであれば、強制的に変更メソッドを呼ぶ
-		if (isFirstChange) allChangeStorage();
+//		if (isFirstChange) storageDetail.callAllChangeStorage();
+		return storageDetail;
 	}
 	
 	
-	/*
-	 * ストレージ内容に変更があった場合の処理（このインスタンスで書き換えが合った場合も含む）
-	 */
-	private function window_storage(event:Event):Void
-	{
-		var storageEvent:StorageEvent = cast(event);
-		trace("window_storage");
-		trace(event);
-		// TODO:
-		window_storage_(storageEvent.key);
-	}
-	private function window_storage_(key:String):Void
-	{
-		trace("window_storage_" + key)
-		if (callbackStorageChange != null) callbackStorageChange(key);
-	}
-	
-	/*
-	 * 全てのストレージの内容に変更があったというイベントを起動する
-	 */
-	private function allChangeStorage():Void
-	{
-		// TODO:
-	}
 }
