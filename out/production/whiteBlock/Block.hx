@@ -48,7 +48,7 @@ class Block
 	public function new()
 	{
 		var factory:LocalStorageFactory = new LocalStorageFactory();
-		localStorageDetail = factory.create(storageHandler_change);
+		localStorageDetail = factory.create(storageHandler_change, false);
 		// 初期データの取得
 		lastBlockUrl = localStorageDetail.lastBlockUrl;
 		// 準備完了タイミングで初期描画

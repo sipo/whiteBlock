@@ -15,6 +15,8 @@ class Background
 	/* データの扱い */
 	private var localStorageDetail:LocalStorageDetail;
 	
+	/** 必ずデータをクリアするデバッグ挙動 */
+	public static inline var DEBUG_CLEAR_DATA:Bool = true;
 	
 	/**
 	 * 起点
@@ -30,7 +32,7 @@ class Background
 	public function new()
 	{
 		var factory:LocalStorageFactory = new LocalStorageFactory();
-		localStorageDetail = factory.create(storage_change);
+		localStorageDetail = factory.create(storage_change, DEBUG_CLEAR_DATA);
 		Tabs.onUpdated.addListener(tab_updated);
 	}
 	

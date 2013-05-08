@@ -1,7 +1,7 @@
 var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
 	var factory = new LocalStorageFactory();
-	this.localStorageDetail = factory.create($bind(this,this.storage_change));
+	this.localStorageDetail = factory.create($bind(this,this.storage_change),true);
 	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updated));
 };
 Background.__name__ = true;
@@ -350,11 +350,11 @@ var LocalStorageFactory = function() {
 };
 LocalStorageFactory.__name__ = true;
 LocalStorageFactory.prototype = {
-	create: function(callbackStorageChange) {
+	create: function(callbackStorageChange,forceClear) {
 		var storageDetail = new LocalStorageDetail(js.Browser.getLocalStorage(),js.Browser.window);
 		var isFirstChange = false;
 		var version = storageDetail.getVersion();
-		if(version == -1) {
+		if(version == -1 || forceClear) {
 			storageDetail.createAllDefault();
 			console.log("ストレージデータを生成しました");
 			version = storageDetail.getVersion();
@@ -485,8 +485,11 @@ Type.enumIndex = function(e) {
 }
 var UnblockState = function() {
 	this.isUnblock = false;
+	this.todayBlockTotal = 0;
+	this.yesterdayBlockTotal = 0;
 	this.startUnblockTime = 0;
 	this.unblockTime = 0;
+	this.startBlockTime = 0;
 };
 UnblockState.__name__ = true;
 UnblockState.createDefault = function() {
@@ -495,16 +498,22 @@ UnblockState.createDefault = function() {
 UnblockState.createFromJson = function(jsonData) {
 	var ans = new UnblockState();
 	ans.isUnblock = jsonData.isUnblock == "true";
+	ans.todayBlockTotal = Std.parseFloat(jsonData.todayBlockTotal);
+	ans.yesterdayBlockTotal = Std.parseFloat(jsonData.yesterdayBlockTotal);
 	ans.startUnblockTime = Std.parseFloat(jsonData.startUnblockTime);
 	ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
+	ans.startBlockTime = Std.parseFloat(jsonData.startBlockTime);
 	return ans;
 }
 UnblockState.prototype = {
 	clone: function() {
 		var ans = new UnblockState();
 		ans.isUnblock = this.isUnblock;
+		ans.todayBlockTotal = this.todayBlockTotal;
+		ans.yesterdayBlockTotal = this.yesterdayBlockTotal;
 		ans.startUnblockTime = this.startUnblockTime;
 		ans.unblockTime = this.unblockTime;
+		ans.startBlockTime = this.startBlockTime;
 		return ans;
 	}
 	,__class__: UnblockState
@@ -998,8 +1007,8 @@ Array.__name__ = true;
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
+Background.DEBUG_CLEAR_DATA = true;
 LocalStorageDetail.STORAGE_VERSION = 1;
-LocalStorageFactory.DEBUG_CLEAR_DATA = false;
 LocalStorageKey.VERSION = "version";
 LocalStorageKey.LAST_BLOCK_URL = "lastBlockUrl";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";

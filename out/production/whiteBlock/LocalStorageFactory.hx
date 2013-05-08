@@ -17,8 +17,6 @@ class LocalStorageFactory
 	 * 基本変数
 	 */
 	
-	/** 必ずデータをクリアするデバッグ挙動 */
-	public static inline var DEBUG_CLEAR_DATA:Bool = false;
  
 	/* ================================================================
 	 * 処理
@@ -34,7 +32,7 @@ class LocalStorageFactory
 	/**
 	 * detailの生成
 	 */
-	public function create(callbackStorageChange:String -> Void):LocalStorageDetail
+	public function create(callbackStorageChange:String -> Void, forceClear:Bool):LocalStorageDetail
 	{
 		// ストレージを用意
 		var storageDetail:LocalStorageDetail = new LocalStorageDetail(Browser.getLocalStorage(), Browser.window);
@@ -43,7 +41,7 @@ class LocalStorageFactory
 		// データバージョンを取得
 		var version:Int = storageDetail.getVersion();
 		// データが存在しない場合、初期化
-		if (version == -1 || DEBUG_CLEAR_DATA){
+		if (version == -1 || forceClear){
 			storageDetail.createAllDefault();
 			trace("ストレージデータを生成しました");
 			version = storageDetail.getVersion();
