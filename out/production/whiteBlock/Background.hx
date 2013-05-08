@@ -15,6 +15,7 @@ class Background
 	/* データの扱い */
 	private var localStorageDetail:LocalStorageDetail;
 	
+	
 	/**
 	 * 起点
 	 */
@@ -47,31 +48,53 @@ class Background
 	private function tab_updated(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
 		trace("tab_updated");
-		trace(tab.url);
+		var targetUrl:String = tab.url;
 		// ブロックページのURlを取得
 		var blockUrl:String = Extension.getURL("block.html");
+		
 		// 除外処理
-		if (tab.url == blockUrl){
+		if (targetUrl == blockUrl){
 			trace("ブロックページなので循環を防ぐために除外");
 			return;
 		}
 		var isWeb:EReg = ~/^(http:)|(https:)/;
-		if (!isWeb.match(tab.url)){
+		if (!isWeb.match(targetUrl)){
 			trace("webページじゃない場合除外");	// あとで、httpsはオプション設定にするべきかも
 			return;
 		}
-		if (tab.url != "http://b.hatena.ne.jp/tail_y/"){
-			trace("テストページじゃない場合除外");	// とりあえずテストページに限定する
-			return;
+//		if (targetUrl != "http://b.hatena.ne.jp/tail_y/"){
+//			trace("テストページじゃない場合除外");	// とりあえずテストページに限定する
+//			return;
+//		}
+		// リストをチェック
+		if (checkList(targetUrl, localStorageDetail.getWhitelist(), localStorageDetail.whitelistUseRegexp)){
+			if (!checkList(targetUrl, localStorageDetail.getBlacklist(), localStorageDetail.blacklistUseRegexp)) return;
 		}
-		// 
-		
-		var window:DOMWindow = Browser.window;
-		var storage:Storage = window.localStorage;
-		storage.setItem("checkData", "sadbgf");
 		// ページをブロックする
-		// ブロックするにはコンテンツスクリプトを利用する方法があるが、
+		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
+		localStorageDetail.lastBlockUrl = targetUrl;
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
+	}
+	/*
+	 * 対象URLがリストに含まれているかチェックする
+	 */
+	private function checkList(targetUrl:String, list:Array<String>, useRegexp:Bool):Bool
+	{
+		trace("checkList " + list);
+		for (url in list) {
+			if (useRegexp){
+				if (new EReg(url, "").match(targetUrl)){	// オプション無しで正規表現チェック
+					trace("match" + url);
+					return true;
+				}
+			}else{
+				if (targetUrl.indexOf(url) != -1){	// 部分一致でチェック
+					trace("indexOf" + url);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	/*
@@ -83,11 +106,4 @@ class Background
 //		Tabs.sendMessage(tab.id, {}, blockCallback);
 	}
 	
-	/*
-	 * ブロックからのコールバック
-	 */
-	private function blockCallback(message:Dynamic):Void
-	{
-		trace("blockCallback");
-	}
 }

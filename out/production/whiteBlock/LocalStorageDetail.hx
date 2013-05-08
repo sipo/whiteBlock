@@ -33,11 +33,11 @@ class LocalStorageDetail {
 	
 	/** ブロック解除の選択時間リスト */
 	private var unblockTimeList:Array<Float>;
-	private function getUnblockTimeList():Array<Float>
+	public function getUnblockTimeList():Array<Float>
 	{
 		return unblockTimeList.copy();	// クローンを返し、参照に触らせない
 	}
-	private function setUnblockTimeList(value:Array<Float>):Void
+	public function setUnblockTimeList(value:Array<Float>):Void
 	{
 		unblockTimeList = value;	// 性質上、上書き
 		flushItem(LocalStorageKey.UNBLOCK_TIME_LIST);	// Storageへ反映
@@ -54,31 +54,37 @@ class LocalStorageDetail {
 	
 	/** ブロック解除状態の情報 */
 	private var unblockState:UnblockState;
-	private function getUnblockState():UnblockState
+	public function getUnblockState():UnblockState
 	{
 		return unblockState.clone();	// クローンを返し、参照に触らせない
 	}
-	private function setUnblockState(value:UnblockState):Void
+	public function setUnblockState(value:UnblockState):Void
 	{
 		unblockState = value;	// 性質上、上書き
 		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
 	}
 	
 	/** ホワイトリスト */
-	public var whitelist:Array<String>;
-	private function getWhitelist():Array<String>
+	private var whitelist:Array<String>;
+	public function getWhitelist():Array<String>
 	{
 		return whitelist.copy();	// クローンを返し、参照に触らせない
 	}
-	private function setWhitelist(value:Array<String>):Void
+	public function setWhitelist(value:Array<String>):Void
 	{
 		whitelist = value;	// 性質上、上書き
+		flushItem(LocalStorageKey.WHITELIST);	// Storageへ反映
+	}
+	public function addWhitelist(value:String):Void
+	{
+		whitelist.push(value);	// 追加
+		trace("addWhitelist" + whitelist);
 		flushItem(LocalStorageKey.WHITELIST);	// Storageへ反映
 	}
 	
 	/** ホワイトリストを正規表現で行うかどうか */
 	public var whitelistUseRegexp(default, set):Bool;
-	private function set_whitelistUseRegexp(value:Bool):Bool
+	public function set_whitelistUseRegexp(value:Bool):Bool
 	{
 		whitelistUseRegexp = value;
 		flushItem(LocalStorageKey.WHITELIST_USE_REGEXP);	// Storageへ反映
@@ -87,11 +93,11 @@ class LocalStorageDetail {
 	
 	/** ブラックリスト */
 	private var blacklist:Array<String>;
-	private function getBlacklist():Array<String>
+	public function getBlacklist():Array<String>
 	{
 		return blacklist.copy();	// クローンを返し、参照に触らせない
 	}
-	private function setBlacklist(value:Array<String>):Void
+	public function setBlacklist(value:Array<String>):Void
 	{
 		blacklist = value;	// 性質上、上書き
 		flushItem(LocalStorageKey.BLACKLIST);	// Storageへ反映
@@ -99,7 +105,7 @@ class LocalStorageDetail {
 	
 	/** ブラックリストを正規表現で行うかどうか */
 	public var blacklistUseRegexp(default, set):Bool;
-	private function set_blacklistUseRegexp(value:Bool):Bool
+	public function set_blacklistUseRegexp(value:Bool):Bool
 	{
 		blacklistUseRegexp = value;
 		flushItem(LocalStorageKey.BLACKLIST_USE_REGEXP);	// Storageへ反映
@@ -108,16 +114,16 @@ class LocalStorageDetail {
 	
 	/** あとで見るリスト */
 	private var laterList:Array<String>;
-	private function getLaterList():Array<String>
+	public function getLaterList():Array<String>
 	{
 		return laterList.copy();	// クローンを返し、参照に触らせない
 	}
-	private function addLaterList(value:String):Void
+	public function addLaterList(value:String):Void
 	{
 		laterList.push(value);	// 追加
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
 	}
-	private function removeLaterList(value:String):Void
+	public function removeLaterList(value:String):Void
 	{
 		laterList.remove(value);	// 削除
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
@@ -131,6 +137,8 @@ class LocalStorageDetail {
 	private function flushItem(key:String):Void
 	{
 		switch(key){
+			case LocalStorageKey.VERSION:
+				setIntItem(key, STORAGE_VERSION);
 			case LocalStorageKey.LAST_BLOCK_URL:
 				storage.setItem(key, lastBlockUrl);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
@@ -174,6 +182,8 @@ class LocalStorageDetail {
 	private function loadData(key:String):Void
 	{
 		switch(key){
+			case LocalStorageKey.VERSION:
+				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_URL:
 				lastBlockUrl = storage.getItem(key);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
@@ -216,6 +226,8 @@ class LocalStorageDetail {
 	private function createDefault(key:String):Void
 	{
 		switch(key){
+			case LocalStorageKey.VERSION:
+				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_URL:
 				lastBlockUrl = null;
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
@@ -318,6 +330,7 @@ class LocalStorageDetail {
 	private function window_storage_(key:String):Void
 	{
 		trace("window_storage_" + key);
+		loadData(key);
 		if (callbackStorageChange != null) callbackStorageChange(key);
 	}
 	

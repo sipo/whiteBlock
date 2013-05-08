@@ -9,32 +9,44 @@ Background.main = function() {
 	Background.background = new Background();
 }
 Background.prototype = {
-	blockCallback: function(message) {
-		console.log("blockCallback");
-	}
-	,afterBlock: function(tab) {
+	afterBlock: function(tab) {
 		console.log("afterBlock");
+	}
+	,checkList: function(targetUrl,list,useRegexp) {
+		console.log("checkList " + Std.string(list));
+		var _g = 0;
+		while(_g < list.length) {
+			var url = list[_g];
+			++_g;
+			if(useRegexp) {
+				if(new EReg(url,"").match(targetUrl)) {
+					console.log("match" + url);
+					return true;
+				}
+			} else if(targetUrl.indexOf(url) != -1) {
+				console.log("indexOf" + url);
+				return true;
+			}
+		}
+		return false;
 	}
 	,tab_updated: function(tabId,changedInfo,tab) {
 		console.log("tab_updated");
-		console.log(tab.url);
+		var targetUrl = tab.url;
 		var blockUrl = chrome.extension.getURL("block.html");
-		if(tab.url == blockUrl) {
+		if(targetUrl == blockUrl) {
 			console.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
 		var isWeb = new EReg("^(http:)|(https:)","");
-		if(!isWeb.match(tab.url)) {
+		if(!isWeb.match(targetUrl)) {
 			console.log("webページじゃない場合除外");
 			return;
 		}
-		if(tab.url != "http://b.hatena.ne.jp/tail_y/") {
-			console.log("テストページじゃない場合除外");
-			return;
+		if(this.checkList(targetUrl,this.localStorageDetail.getWhitelist(),this.localStorageDetail.whitelistUseRegexp)) {
+			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
-		var window = js.Browser.window;
-		var storage = window.localStorage;
-		storage.setItem("checkData","sadbgf");
+		this.localStorageDetail.set_lastBlockUrl(targetUrl);
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 	,storage_change: function(key) {
@@ -98,6 +110,7 @@ LocalStorageDetail.__name__ = true;
 LocalStorageDetail.prototype = {
 	window_storage_: function(key) {
 		console.log("window_storage_" + key);
+		this.loadData(key);
 		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
 	}
 	,window_storage: function(event) {
@@ -109,7 +122,7 @@ LocalStorageDetail.prototype = {
 		this.callbackStorageChange = callbackStorageChange;
 	}
 	,loadAllValue: function() {
-		var _g = 0, _g1 = ["lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -117,7 +130,7 @@ LocalStorageDetail.prototype = {
 		}
 	}
 	,createAllDefault: function() {
-		var _g = 0, _g1 = ["lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -131,6 +144,8 @@ LocalStorageDetail.prototype = {
 	}
 	,createDefault: function(key) {
 		switch(key) {
+		case "version":
+			break;
 		case "lastBlockUrl":
 			this.set_lastBlockUrl(null);
 			break;
@@ -187,6 +202,8 @@ LocalStorageDetail.prototype = {
 	}
 	,loadData: function(key) {
 		switch(key) {
+		case "version":
+			break;
 		case "lastBlockUrl":
 			this.set_lastBlockUrl(this.storage.getItem(key));
 			break;
@@ -229,6 +246,9 @@ LocalStorageDetail.prototype = {
 	}
 	,flushItem: function(key) {
 		switch(key) {
+		case "version":
+			this.setIntItem(key,1);
+			break;
 		case "lastBlockUrl":
 			this.storage.setItem(key,this.lastBlockUrl);
 			break;
@@ -288,6 +308,11 @@ LocalStorageDetail.prototype = {
 		this.flushItem("whitelistUseRegexp");
 		return this.whitelistUseRegexp;
 	}
+	,addWhitelist: function(value) {
+		this.whitelist.push(value);
+		console.log("addWhitelist" + Std.string(this.whitelist));
+		this.flushItem("whitelist");
+	}
 	,setWhitelist: function(value) {
 		this.whitelist = value;
 		this.flushItem("whitelist");
@@ -329,7 +354,7 @@ LocalStorageFactory.prototype = {
 		var storageDetail = new LocalStorageDetail(js.Browser.getLocalStorage(),js.Browser.window);
 		var isFirstChange = false;
 		var version = storageDetail.getVersion();
-		if(version == -1 || true) {
+		if(version == -1) {
 			storageDetail.createAllDefault();
 			console.log("ストレージデータを生成しました");
 			version = storageDetail.getVersion();
@@ -354,7 +379,7 @@ LocalStorageFactory.prototype = {
 var LocalStorageKey = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
-	return ["lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+	return ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
 var Reflect = function() { }
 Reflect.__name__ = true;
@@ -974,7 +999,7 @@ if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
 LocalStorageDetail.STORAGE_VERSION = 1;
-LocalStorageFactory.DEBUG_CLEAR_DATA = true;
+LocalStorageFactory.DEBUG_CLEAR_DATA = false;
 LocalStorageKey.VERSION = "version";
 LocalStorageKey.LAST_BLOCK_URL = "lastBlockUrl";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";

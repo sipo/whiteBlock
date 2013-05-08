@@ -13,6 +13,7 @@ class LocalStorageKey {
 	
 	public static inline function KEY_LIST():Array<String>{
 		return [
+			VERSION,
 			LAST_BLOCK_URL,
 			UNBLOCK_TIME_LIST,
 			UNBLOCK_TIME_DEFAULT_INDEX,
