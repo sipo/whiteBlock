@@ -32,14 +32,14 @@ class Background
 	public function new()
 	{
 		var factory:LocalStorageFactory = new LocalStorageFactory();
-		localStorageDetail = factory.create(storage_change, DEBUG_CLEAR_DATA);
-		Tabs.onUpdated.addListener(tab_updated);
+		localStorageDetail = factory.create(storage_changeHandler, DEBUG_CLEAR_DATA);
+		Tabs.onUpdated.addListener(tab_updatedHandler);
 	}
 	
 	/*
 	 * ストレージデータの変更時
 	 */
-	private function storage_change(key:String):Void
+	private function storage_changeHandler(key:String):Void
 	{
 		// 特になし
 	}
@@ -47,7 +47,7 @@ class Background
 	/*
 	 * タブの更新時
 	 */
-	private function tab_updated(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
+	private function tab_updatedHandler(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
 		trace("tab_updated");
 		var targetUrl:String = tab.url;
@@ -65,7 +65,7 @@ class Background
 			return;
 		}
 //		if (targetUrl != "http://b.hatena.ne.jp/tail_y/"){
-//			trace("テストページじゃない場合除外");	// とりあえずテストページに限定する
+//			trace("テストページじゃない場合除外");	// 開発用にテストページに限定する
 //			return;
 //		}
 		// リストをチェック

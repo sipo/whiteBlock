@@ -113,17 +113,17 @@ class LocalStorageDetail {
 	}
 	
 	/** あとで見るリスト */
-	private var laterList:Array<String>;
-	public function getLaterList():Array<String>
+	private var laterList:Array<LaterPage>;
+	public function getLaterList():Array<LaterPage>
 	{
-		return laterList.copy();	// クローンを返し、参照に触らせない
+		return LaterPage.arrayClone(laterList);	// クローンを返し、参照に触らせない
 	}
-	public function addLaterList(value:String):Void
+	public function addLaterList(value:LaterPage):Void
 	{
 		laterList.push(value);	// 追加
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
 	}
-	public function removeLaterList(value:String):Void
+	public function removeLaterList(value:LaterPage):Void
 	{
 		laterList.remove(value);	// 削除
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
@@ -201,7 +201,7 @@ class LocalStorageDetail {
 			case LocalStorageKey.BLACKLIST_USE_REGEXP:
 				blacklistUseRegexp = getArrayBool(key);
 			case LocalStorageKey.LATER_LIST:
-				laterList = getArrayString(key);
+				laterList = LaterPage.createArrayFromJson(storage.getItem(key));
 			default :
 				throw "対応していない値です key=" + key;
 		}
@@ -277,7 +277,7 @@ class LocalStorageDetail {
 	public function new(storage:Storage, window:DOMWindow):Void
 	{
 		this.storage = storage;
-		window.addEventListener("storage", window_storage);
+		window.addEventListener("storage", window_storageHandler);
 	}
 	
 	/**
@@ -321,13 +321,13 @@ class LocalStorageDetail {
 	/*
 	 * ストレージ内容に変更があった場合の処理（このインスタンスで書き換えが合った場合も含む）
 	 */
-	private function window_storage(event:Event):Void
+	private function window_storageHandler(event:Event):Void
 	{
 		trace("window_storage " + event);
 		var storageEvent:StorageEvent = cast(event);
-		window_storage_(storageEvent.key);
+		window_storageHandler_(storageEvent.key);
 	}
-	private function window_storage_(key:String):Void
+	private function window_storageHandler_(key:String):Void
 	{
 		trace("window_storage_" + key);
 		loadData(key);

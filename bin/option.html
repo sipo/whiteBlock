@@ -2,13 +2,14 @@
 <html lang="ja">
     <head>
         <meta charset="utf-8" />
+        <script type="text/javascript" src="./jquery.js"></script>
         <script type="text/javascript" src="./option.js"></script>
     </head>
     <body>
         <section id="blockState">
             <div id="blockDisplay">
                 <p>現在ブロック中です</p>
-                <p><small><span id="blockTime">00時間00分間</span></small></p>
+                <p><small><span id="blockTime">00時間00分</span>経過</small></p>
                 <p>
                     <select id="unblockTime" name="unblockTime"><!--
                         <option value="5">5分</option>
@@ -26,7 +27,7 @@
         <section id="laterListSection">
             <h1>あとで見るリスト</h1>
             <ul id="laterList">
-                <li><a href="testURL">testURL</a></li>
+                <li class="laterUrl"><a href="::url::" class="laterUrlLink">::titleAndUrl::</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
             </ul>
         </section>
         <hr />
@@ -36,24 +37,19 @@
             <p>数字で入力して下さい。改行で区切って下さい</p>
             <textarea name="unblockTimeList" id="unblockTimeList" rows="8" cols="40"></textarea>
             <h2><label for="unblockTimeDefaultIndex">ブロック解除時間のデフォルト</label></h2>
-            <select id="unblockTimeDefaultIndex"><!--
-                <option value="0">3分</option>
-                <option value="1">5分</option>
-                <option value="2">10分</option>
-                <option value="3">20分</option>
-                <option value="4">30分</option>
-                <option value="5">60分</option>
-            --></select>
+            <select id="unblockTimeDefaultIndex"><option value="::index::">::time::</option></select>
+
             <h2><label for="whitelist">ホワイトリスト</label></h2>
             <p>このURLを含むページをブロックしません</p>
             <textarea id="whitelist" rows="4" cols="100"></textarea>
             <label for="whitelistUseRegexp"><input type="checkbox" id="whitelistUseRegexp" value="true" />正規表現を使う</label>
+
             <h2><label for="blacklist">ブラックリスト</label></h2>
             <p>ホワイトリストに一致しても、このURLを含むページはブロックします</p>
             <textarea id="blacklist" rows="4" cols="100"></textarea>
             <label for="blacklistUseRegexp"><input type="checkbox" id="blacklistUseRegexp" value="true" />正規表現を使う</label>
         
-            <p><input type="button" value="決定" /></p>
+            <p><input type="button" id="save" value="設定を保存する" /></p>
         </section>
     </body>
 </html>

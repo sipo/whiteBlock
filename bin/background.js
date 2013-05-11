@@ -1,8 +1,8 @@
 var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = function() {
 	var factory = new LocalStorageFactory();
-	this.localStorageDetail = factory.create($bind(this,this.storage_change),true);
-	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updated));
+	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),true);
+	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updatedHandler));
 };
 Background.__name__ = true;
 Background.main = function() {
@@ -30,7 +30,7 @@ Background.prototype = {
 		}
 		return false;
 	}
-	,tab_updated: function(tabId,changedInfo,tab) {
+	,tab_updatedHandler: function(tabId,changedInfo,tab) {
 		console.log("tab_updated");
 		var targetUrl = tab.url;
 		var blockUrl = chrome.extension.getURL("block.html");
@@ -49,7 +49,7 @@ Background.prototype = {
 		this.localStorageDetail.set_lastBlockUrl(targetUrl);
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
-	,storage_change: function(key) {
+	,storage_changeHandler: function(key) {
 	}
 	,__class__: Background
 }
@@ -102,21 +102,56 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
+var LaterPage = function(title,url) {
+	this.title = title;
+	this.url = url;
+};
+LaterPage.__name__ = true;
+LaterPage.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
+}
+LaterPage.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new LaterPage(jsonData[i].title,jsonData[i].url));
+	}
+	return ans;
+}
+LaterPage.prototype = {
+	clone: function() {
+		return new LaterPage(this.title,this.url);
+	}
+	,__class__: LaterPage
+}
 var LocalStorageDetail = function(storage,window) {
 	this.storage = storage;
-	window.addEventListener("storage",$bind(this,this.window_storage));
+	window.addEventListener("storage",$bind(this,this.window_storageHandler));
 };
 LocalStorageDetail.__name__ = true;
 LocalStorageDetail.prototype = {
-	window_storage_: function(key) {
+	window_storageHandler_: function(key) {
 		console.log("window_storage_" + key);
 		this.loadData(key);
 		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
 	}
-	,window_storage: function(event) {
+	,window_storageHandler: function(event) {
 		console.log("window_storage " + Std.string(event));
 		var storageEvent = event;
-		this.window_storage_(storageEvent.key);
+		this.window_storageHandler_(storageEvent.key);
 	}
 	,setCallback: function(callbackStorageChange) {
 		this.callbackStorageChange = callbackStorageChange;
@@ -229,7 +264,7 @@ LocalStorageDetail.prototype = {
 			this.set_blacklistUseRegexp(this.getArrayBool(key));
 			break;
 		case "laterList":
-			this.laterList = this.getArrayString(key);
+			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
 			break;
 		default:
 			throw "対応していない値です key=" + key;
@@ -289,7 +324,7 @@ LocalStorageDetail.prototype = {
 		this.flushItem("laterList");
 	}
 	,getLaterList: function() {
-		return this.laterList.slice();
+		return LaterPage.arrayClone(this.laterList);
 	}
 	,set_blacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;

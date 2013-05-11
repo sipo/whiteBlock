@@ -2,16 +2,16 @@ var $estr = function() { return js.Boot.__string_rec(this,''); };
 var Block = function() {
 	this.isReady = false;
 	var factory = new LocalStorageFactory();
-	this.localStorageDetail = factory.create($bind(this,this.storageHandler_change),false);
+	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	this.lastBlockUrl = this.localStorageDetail.lastBlockUrl;
-	new js.JQuery("document").ready($bind(this,this.documentHandler_ready));
+	new js.JQuery("document").ready($bind(this,this.document_readyHandler));
 };
 Block.__name__ = true;
 Block.main = function() {
 	Block.mainInstance = new Block();
 }
 Block.prototype = {
-	addWhiteListHandler_click: function(event) {
+	addWhiteList_clickHandler: function(event) {
 		this.localStorageDetail.addWhitelist(this.addWhitelistText.val());
 		js.Browser.window.location.assign(this.lastBlockUrl);
 	}
@@ -22,16 +22,16 @@ Block.prototype = {
 		if(100 < fieldSize) fieldSize = 100;
 		this.addWhitelistText.attr("size",fieldSize);
 	}
-	,storageHandler_change: function(key) {
+	,storage_changeHandler: function(key) {
 		if(!this.isReady) return;
 		console.log("storage_change" + key);
 	}
-	,documentHandler_ready: function(event) {
+	,document_readyHandler: function(event) {
 		this.isReady = true;
 		this.addWhiteList = new js.JQuery("#addWhiteList");
 		this.addWhitelistText = new js.JQuery("#addWhitelistText");
 		this.drawAddWhitelistText();
-		this.addWhiteList.click($bind(this,this.addWhiteListHandler_click));
+		this.addWhiteList.click($bind(this,this.addWhiteList_clickHandler));
 	}
 	,__class__: Block
 }
@@ -70,21 +70,56 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
+var LaterPage = function(title,url) {
+	this.title = title;
+	this.url = url;
+};
+LaterPage.__name__ = true;
+LaterPage.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
+}
+LaterPage.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new LaterPage(jsonData[i].title,jsonData[i].url));
+	}
+	return ans;
+}
+LaterPage.prototype = {
+	clone: function() {
+		return new LaterPage(this.title,this.url);
+	}
+	,__class__: LaterPage
+}
 var LocalStorageDetail = function(storage,window) {
 	this.storage = storage;
-	window.addEventListener("storage",$bind(this,this.window_storage));
+	window.addEventListener("storage",$bind(this,this.window_storageHandler));
 };
 LocalStorageDetail.__name__ = true;
 LocalStorageDetail.prototype = {
-	window_storage_: function(key) {
+	window_storageHandler_: function(key) {
 		console.log("window_storage_" + key);
 		this.loadData(key);
 		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
 	}
-	,window_storage: function(event) {
+	,window_storageHandler: function(event) {
 		console.log("window_storage " + Std.string(event));
 		var storageEvent = event;
-		this.window_storage_(storageEvent.key);
+		this.window_storageHandler_(storageEvent.key);
 	}
 	,setCallback: function(callbackStorageChange) {
 		this.callbackStorageChange = callbackStorageChange;
@@ -197,7 +232,7 @@ LocalStorageDetail.prototype = {
 			this.set_blacklistUseRegexp(this.getArrayBool(key));
 			break;
 		case "laterList":
-			this.laterList = this.getArrayString(key);
+			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
 			break;
 		default:
 			throw "対応していない値です key=" + key;
@@ -257,7 +292,7 @@ LocalStorageDetail.prototype = {
 		this.flushItem("laterList");
 	}
 	,getLaterList: function() {
-		return this.laterList.slice();
+		return LaterPage.arrayClone(this.laterList);
 	}
 	,set_blacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;

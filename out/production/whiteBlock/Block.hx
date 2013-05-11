@@ -48,17 +48,17 @@ class Block
 	public function new()
 	{
 		var factory:LocalStorageFactory = new LocalStorageFactory();
-		localStorageDetail = factory.create(storageHandler_change, false);
+		localStorageDetail = factory.create(storage_changeHandler, false);
 		// 初期データの取得
 		lastBlockUrl = localStorageDetail.lastBlockUrl;
 		// 準備完了タイミングで初期描画
-		new JQuery("document").ready(documentHandler_ready);
+		new JQuery("document").ready(document_readyHandler);
 	}
 	
 	/*
 	 * DOM準備完了
 	 */
-	private function documentHandler_ready(event:JqEvent):Void
+	private function document_readyHandler(event:JqEvent):Void
 	{
 		isReady = true;
 		// パーツ取得
@@ -67,13 +67,13 @@ class Block
 		// 描画呼び出し
 		drawAddWhitelistText();
 		// イベント登録
-		addWhiteList.click(addWhiteListHandler_click);
+		addWhiteList.click(addWhiteList_clickHandler);
 	}
 	
 	/*
 	 * ストレージデータの変更時
 	 */
-	private function storageHandler_change(key:String):Void
+	private function storage_changeHandler(key:String):Void
 	{
 		if (!isReady) return;
 		trace("storage_change" + key);
@@ -104,7 +104,7 @@ class Block
 	/*
 	 * ホワイトリストに追加し、画面遷移
 	 */
-	private function addWhiteListHandler_click(event:JqEvent):Void
+	private function addWhiteList_clickHandler(event:JqEvent):Void
 	{
 		localStorageDetail.addWhitelist(addWhitelistText.val());
 		Browser.window.location.assign(lastBlockUrl);
