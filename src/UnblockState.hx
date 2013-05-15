@@ -1,31 +1,24 @@
 package ;
+import haxe.Json;
 import Std;
 class UnblockState 
 {
 	/** アンブロック中かどうか */
 	public var isUnblock:Bool;
 	
-	/** 今日のアンブロック時間合計 */
-	public var todayBlockTotal:Float;
-	/** 今日のアンブロック時間合計 */
-	public var yesterdayBlockTotal:Float;
+	/** 今日のアンブロック時間合計（現在アンブロック中の場合、それを含まない） */
+	public var todayUnblockTotal:Float;
+	/** 昨日のアンブロック時間合計 */
+	public var yesterdayUnblockTotal:Float;
+	/** isUnblockが最後に切り替わった時間（ブロック中ならブロック開始時間、アンブロック中はアンブロック開始時間。延長の場合は切り替わっt事にしない） */
+	public var switchTime:Float;
 	
 	/* --------------------------------
 	 * アンブロック中
 	 */
 	
-	/** アンブロックを開始した時間 */
-	public var startUnblockTime:Float;
-	
 	/** 設定されたアンブロック期間（ミリ秒） */
 	public var unblockTime:Float;
-	
-	/* --------------------------------
-	 * ブロック中
-	 */
-	
-	/** ブロックを開始した時間 */
-	public var startBlockTime:Float;
 	
 	/* ================================================================
 	 * 処理
@@ -34,14 +27,13 @@ class UnblockState
 	/**
 	 * コンストラクタ
 	 */
-	private function new()
+	public function new()
 	{
 		isUnblock = false;
-		todayBlockTotal = 0;
-		yesterdayBlockTotal = 0;
-		startUnblockTime = 0;
+		todayUnblockTotal = 0;
+		yesterdayUnblockTotal = 0;
+		switchTime = Date.now().getTime();
 		unblockTime = 0;
-		startBlockTime = 0;
 	}
 	
 	/**
@@ -55,15 +47,16 @@ class UnblockState
 	/**
 	 * Jsonからインスタンスを生成
 	 */
-	public static function createFromJson(jsonData:Dynamic):UnblockState
+	public static function createFromJson(jsonText:String):UnblockState
 	{
+		var jsonData:Dynamic = Json.parse(jsonText);
 		var ans:UnblockState = new UnblockState();
-		ans.isUnblock = jsonData.isUnblock == "true";
-		ans.todayBlockTotal = Std.parseFloat(jsonData.todayBlockTotal);
-		ans.yesterdayBlockTotal = Std.parseFloat(jsonData.yesterdayBlockTotal);
-		ans.startUnblockTime = Std.parseFloat(jsonData.startUnblockTime);
+		Note.debug(["e" , jsonData.isUnblock , Type.typeof(jsonData.isUnblock)]);
+		ans.isUnblock = jsonData.isUnblock;
+		ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
+		ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
+		ans.switchTime = Std.parseFloat(jsonData.switchTime);
 		ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
-		ans.startBlockTime = Std.parseFloat(jsonData.startBlockTime);
 		return ans;
 	}
 	
@@ -74,11 +67,10 @@ class UnblockState
 	{
 		var ans:UnblockState = new UnblockState();
 		ans.isUnblock = isUnblock;
-		ans.todayBlockTotal = todayBlockTotal;
-		ans.yesterdayBlockTotal = yesterdayBlockTotal;
-		ans.startUnblockTime = startUnblockTime;
+		ans.todayUnblockTotal = todayUnblockTotal;
+		ans.yesterdayUnblockTotal = yesterdayUnblockTotal;
+		ans.switchTime = switchTime;
 		ans.unblockTime = unblockTime;
-		ans.startBlockTime = startBlockTime;
 		return ans;
 	}
 }

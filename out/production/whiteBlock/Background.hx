@@ -49,19 +49,27 @@ class Background
 	 */
 	private function tab_updatedHandler(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
-		trace("tab_updated");
+		Note.log("tab_updated");
+		
+		// 裏で変更があった場合、タブイベントとstorageイベントは前後する可能性があるので、ロードを挟む
+		localStorageDetail.loadAllValue();
+		
 		var targetUrl:String = tab.url;
 		// ブロックページのURlを取得
 		var blockUrl:String = Extension.getURL("block.html");
 		
 		// 除外処理
+		if (targetUrl == null || targetUrl == "null"){
+			Note.log("null除外");
+			return;
+		}
 		if (targetUrl == blockUrl){
-			trace("ブロックページなので循環を防ぐために除外");
+			Note.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
 		var isWeb:EReg = ~/^(http:)|(https:)/;
 		if (!isWeb.match(targetUrl)){
-			trace("webページじゃない場合除外");	// あとで、httpsはオプション設定にするべきかも
+			Note.log("webページじゃない場合除外");	// あとで、httpsはオプション設定にするべきかも
 			return;
 		}
 //		if (targetUrl != "http://b.hatena.ne.jp/tail_y/"){
@@ -72,9 +80,12 @@ class Background
 		if (checkList(targetUrl, localStorageDetail.getWhitelist(), localStorageDetail.whitelistUseRegexp)){
 			if (!checkList(targetUrl, localStorageDetail.getBlacklist(), localStorageDetail.blacklistUseRegexp)) return;
 		}
+		// ブロック解除中ならブロックしない
+		if (localStorageDetail.checkUnblock()) return;
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
-		localStorageDetail.lastBlockUrl = targetUrl;
+		Note.log("ブロック " + targetUrl);
+		localStorageDetail.setLastBlockUrl(targetUrl);
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	/*
@@ -82,16 +93,16 @@ class Background
 	 */
 	private function checkList(targetUrl:String, list:Array<String>, useRegexp:Bool):Bool
 	{
-		trace("checkList " + list);
+		Note.log("checkList " + list);
 		for (url in list) {
 			if (useRegexp){
 				if (new EReg(url, "").match(targetUrl)){	// オプション無しで正規表現チェック
-					trace("match" + url);
+					Note.log("match" + url);
 					return true;
 				}
 			}else{
 				if (targetUrl.indexOf(url) != -1){	// 部分一致でチェック
-					trace("indexOf" + url);
+					Note.log("indexOf" + url);
 					return true;
 				}
 			}

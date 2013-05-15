@@ -11,16 +11,14 @@
                 <p>現在ブロック中です</p>
                 <p><small><span id="blockTime">00時間00分</span>経過</small></p>
                 <p>
-                    <select id="unblockTime" name="unblockTime"><!--
-                        <option value="5">5分</option>
-                        <option value="10">10分</option>
-                    --></select>
+                    <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
                     <a href="#" id="unblock">少しだけブロックを解除する</a>
                 </p>
             </div>
             <div id="unblockDisplay">
                 <p>現在ブロックが解除されています</p>
                 <p><small>あと<span id="unblockTimeLeft">00分00秒</span></small></p>
+                <a href="#" id="endUnblock">ブロック解除を終了する</a>
             </div>
         </section>
         <hr />
@@ -32,12 +30,12 @@
         </section>
         <hr />
         <section id="optionSection">
-            <h1>WhiteBlockの設定</h1>
+            <h1>設定</h1>
             <h2><label for="unblockTimeList">ブロック解除時間（分）</label></h2>
             <p>数字で入力して下さい。改行で区切って下さい</p>
             <textarea name="unblockTimeList" id="unblockTimeList" rows="8" cols="40"></textarea>
             <h2><label for="unblockTimeDefaultIndex">ブロック解除時間のデフォルト</label></h2>
-            <select id="unblockTimeDefaultIndex"><option value="::index::">::time::</option></select>
+            <select id="unblockTimeDefaultIndex"><option value="::index::">::text::</option></select>
 
             <h2><label for="whitelist">ホワイトリスト</label></h2>
             <p>このURLを含むページをブロックしません</p>

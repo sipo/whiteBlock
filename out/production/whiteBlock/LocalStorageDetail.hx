@@ -23,9 +23,10 @@ class LocalStorageDetail {
 	 */
 	
 	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
-	public var lastBlockUrl(default, set):String;
-	private function set_lastBlockUrl(value:String):String
+	public var lastBlockUrl(default, null):String;
+	public function setLastBlockUrl(value:String):String
 	{
+		Note.log("set_lastBlockUrl" + value);
 		lastBlockUrl = value;
 		flushItem(LocalStorageKey.LAST_BLOCK_URL);	// Storageへ反映
 		return lastBlockUrl;
@@ -44,8 +45,8 @@ class LocalStorageDetail {
 	}
 	
 	/** ブロック解除選択時間のデフォルト選択のインデックス番号 */
-	public var unblockTimeDefaultIndex(default, set):Int;
-	private function set_unblockTimeDefaultIndex(value:Int):Int
+	public var unblockTimeDefaultIndex(default, null):Int;
+	public function setUnblockTimeDefaultIndex(value:Int):Int
 	{
 		unblockTimeDefaultIndex = value;
 		flushItem(LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX);	// Storageへ反映
@@ -56,12 +57,7 @@ class LocalStorageDetail {
 	private var unblockState:UnblockState;
 	public function getUnblockState():UnblockState
 	{
-		return unblockState.clone();	// クローンを返し、参照に触らせない
-	}
-	public function setUnblockState(value:UnblockState):Void
-	{
-		unblockState = value;	// 性質上、上書き
-		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
+		return unblockState.clone();	// クローンで返して、触らせない。
 	}
 	
 	/** ホワイトリスト */
@@ -77,14 +73,14 @@ class LocalStorageDetail {
 	}
 	public function addWhitelist(value:String):Void
 	{
+		Note.log("addWhitelist" + whitelist);
 		whitelist.push(value);	// 追加
-		trace("addWhitelist" + whitelist);
 		flushItem(LocalStorageKey.WHITELIST);	// Storageへ反映
 	}
 	
 	/** ホワイトリストを正規表現で行うかどうか */
-	public var whitelistUseRegexp(default, set):Bool;
-	public function set_whitelistUseRegexp(value:Bool):Bool
+	public var whitelistUseRegexp(default, null):Bool;
+	public function setWhitelistUseRegexp(value:Bool):Bool
 	{
 		whitelistUseRegexp = value;
 		flushItem(LocalStorageKey.WHITELIST_USE_REGEXP);	// Storageへ反映
@@ -104,8 +100,8 @@ class LocalStorageDetail {
 	}
 	
 	/** ブラックリストを正規表現で行うかどうか */
-	public var blacklistUseRegexp(default, set):Bool;
-	public function set_blacklistUseRegexp(value:Bool):Bool
+	public var blacklistUseRegexp(default, null):Bool;
+	public function setBlacklistUseRegexp(value:Bool):Bool
 	{
 		blacklistUseRegexp = value;
 		flushItem(LocalStorageKey.BLACKLIST_USE_REGEXP);	// Storageへ反映
@@ -136,6 +132,7 @@ class LocalStorageDetail {
 	/* キーに対応した値を、Storageに反映する */
 	private function flushItem(key:String):Void
 	{
+		Note.log("flushItem " + key);
 		switch(key){
 			case LocalStorageKey.VERSION:
 				setIntItem(key, STORAGE_VERSION);
@@ -160,6 +157,7 @@ class LocalStorageDetail {
 			default :
 				throw "対応していない値です key=" + key;
 		}
+		window_storageHandler_(key);
 	}
 	/* JSONに変換してからStorageに反映する */
 	private function setJsonItem(key:String, value:Dynamic):Void
@@ -181,6 +179,7 @@ class LocalStorageDetail {
 	/* キーに対応した値を、Storageからロードする */
 	private function loadData(key:String):Void
 	{
+		Note.log("loadData " + key);
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
@@ -192,6 +191,7 @@ class LocalStorageDetail {
 				unblockTimeDefaultIndex = Std.parseInt(storage.getItem(key));
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createFromJson(storage.getItem(key));
+				Note.debug("c" + unblockState);
 			case LocalStorageKey.WHITELIST:
 				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
@@ -232,6 +232,7 @@ class LocalStorageDetail {
 				lastBlockUrl = null;
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
+					5 * 1000,
 					3 * 60 * 1000,
 					5 * 60 * 1000,
 					10 * 60 * 1000,
@@ -276,6 +277,7 @@ class LocalStorageDetail {
 	 */
 	public function new(storage:Storage, window:DOMWindow):Void
 	{
+		Note.log("LocalStorageDetail constractor");
 		this.storage = storage;
 		window.addEventListener("storage", window_storageHandler);
 	}
@@ -323,24 +325,120 @@ class LocalStorageDetail {
 	 */
 	private function window_storageHandler(event:Event):Void
 	{
-		trace("window_storage " + event);
+		Note.log("window_storage " + event);
 		var storageEvent:StorageEvent = cast(event);
 		window_storageHandler_(storageEvent.key);
 	}
 	private function window_storageHandler_(key:String):Void
 	{
-		trace("window_storage_" + key);
 		loadData(key);
 		if (callbackStorageChange != null) callbackStorageChange(key);
 	}
 	
-//	/*
-//	 * 全てのストレージの内容に変更があったというイベントを起動する
-//	 */
-//	public function callAllChangeStorage():Void
-//	{
-//		for (key in LocalStorageKey.KEY_LIST()) {
-//			window_storage_(key);
-//		}
-//	}
+	
+	/**
+	 * ブロック解除を開始する
+	 */
+	public function startUnblock(unblockTime:Float):Void
+	{
+		var date:Date = Date.now();
+		var nextUnblockState:UnblockState = new UnblockState();
+		nextUnblockState.isUnblock = true;
+		if (unblockState.isUnblock){	// 既にブロック解除されている場合は、終了時間の延長だけを行う
+			// 経過時間を取得
+			var passing:Float = unblockState.switchTime - date.getTime();
+			// 設定時間と足して、解除時間として代入
+			nextUnblockState.unblockTime = passing + unblockTime;
+			// 後は一緒
+			nextUnblockState.switchTime = unblockState.switchTime;
+			nextUnblockState.yesterdayUnblockTotal = unblockState.yesterdayUnblockTotal;
+			nextUnblockState.todayUnblockTotal = unblockState.todayUnblockTotal;
+		}else {	// 延長でなく新規の場合、switchTimeのとトータル時間の更新もする
+			var totalTimeKit:TotalTimeKit = calcTotalTime(date);
+			// 現在がswitchTime
+			nextUnblockState.switchTime = date.getTime();
+			nextUnblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+			nextUnblockState.todayUnblockTotal = totalTimeKit.today;
+			nextUnblockState.unblockTime = unblockTime;
+		}
+		// 上書き
+		unblockState = nextUnblockState;
+		Note.debug("a" + unblockState);
+		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
+	}
+	
+	/**
+	 * ブロック解除が終了しないかどうかチェックする
+	 * @return Unblockならtrue
+	 */
+	public function checkUnblock():Bool
+	{
+		trace("checkUnblock");
+		if (!unblockState.isUnblock) return false;
+		var date:Date = Date.now();
+		var endTime:Float = unblockState.switchTime + unblockState.unblockTime;
+		// 終了しているかチェック
+		trace([date.getTime() , endTime]);
+		if (date.getTime() < endTime){
+			return true;	// まだ終了していないなら、trueを返す
+		}
+		// 終了していた場合、終了したのは今ではなく少し前なはずなので、その時間でdateを作り、TotalTimeを計算
+		var endDate:Date = Date.fromTime(endTime);
+		var totalTimeKit:TotalTimeKit = calcTotalTime(endDate);
+		// unblockStateを作る
+		unblockState = new UnblockState();
+		unblockState.isUnblock = false;
+		unblockState.switchTime = endTime;
+		unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+		unblockState.todayUnblockTotal = totalTimeKit.today;
+		unblockState.unblockTime = -1;
+		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
+		// 結果を返す
+		return false;
+	}
+	
+	/*
+	 * 前日と当日の解除時間を出す
+	 * unblockStateが更新される場合は、「今」ではなく切り替わりがあった時間を使用すること
+	 * リアルタイム時間を算出する場合は今でいい。
+	 */
+	private function calcTotalTime(date:Date):TotalTimeKit
+	{
+		var ans:TotalTimeKit = {yesterday:0, today:0}
+		// 前回の更新時間を取得
+		var lastDate:Date = Date.fromTime(unblockState.switchTime);
+		// 日付の変動があったかどうか
+		var isSameDay:Bool = (lastDate.getDay() == date.getDay());
+		// 場合分け
+		if (unblockState.isUnblock){
+			if (isSameDay){
+				// 日付またぎなし、ブロック解除中
+				// 今日の合計は、それまでの合計と、今現在進行中の数値を足す
+				var nowUnblockTimeTotal:Float = date.getTime() - unblockState.switchTime;
+				ans.today = unblockState.todayUnblockTotal + nowUnblockTimeTotal;
+				ans.yesterday = unblockState.yesterdayUnblockTotal;
+			}else{
+				// 日付またぎありyear : Int, month : Int, day : Int, hour : Int, min : Int, sec : Int
+				var today0HourTime:Float = new Date(date.getFullYear(), date.getMonth(), date.getDay(), 0, 0, 0).getTime();
+				ans.yesterday = unblockState.todayUnblockTotal + today0HourTime - unblockState.switchTime;
+				ans.today = date.getTime() - today0HourTime;
+			}
+		}else{
+			if (isSameDay){
+				// 単純パターン（日付またぎ無し、ブロック中）
+				ans.yesterday = unblockState.yesterdayUnblockTotal;
+				ans.today = unblockState.todayUnblockTotal;
+			}else{
+				// 日付またぎあり、ブロック中
+				ans.yesterday = unblockState.todayUnblockTotal;
+				ans.today = 0;
+			}
+		}
+		return ans;
+	}
+	
+}
+typedef TotalTimeKit = {
+	today:Float,
+	yesterday:Float
 }

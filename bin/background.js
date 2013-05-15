@@ -13,40 +13,47 @@ Background.prototype = {
 		console.log("afterBlock");
 	}
 	,checkList: function(targetUrl,list,useRegexp) {
-		console.log("checkList " + Std.string(list));
+		Note.log("checkList " + Std.string(list));
 		var _g = 0;
 		while(_g < list.length) {
 			var url = list[_g];
 			++_g;
 			if(useRegexp) {
 				if(new EReg(url,"").match(targetUrl)) {
-					console.log("match" + url);
+					Note.log("match" + url);
 					return true;
 				}
 			} else if(targetUrl.indexOf(url) != -1) {
-				console.log("indexOf" + url);
+				Note.log("indexOf" + url);
 				return true;
 			}
 		}
 		return false;
 	}
 	,tab_updatedHandler: function(tabId,changedInfo,tab) {
-		console.log("tab_updated");
+		Note.log("tab_updated");
+		this.localStorageDetail.loadAllValue();
 		var targetUrl = tab.url;
 		var blockUrl = chrome.extension.getURL("block.html");
+		if(targetUrl == null || targetUrl == "null") {
+			Note.log("null除外");
+			return;
+		}
 		if(targetUrl == blockUrl) {
-			console.log("ブロックページなので循環を防ぐために除外");
+			Note.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
 		var isWeb = new EReg("^(http:)|(https:)","");
 		if(!isWeb.match(targetUrl)) {
-			console.log("webページじゃない場合除外");
+			Note.log("webページじゃない場合除外");
 			return;
 		}
 		if(this.checkList(targetUrl,this.localStorageDetail.getWhitelist(),this.localStorageDetail.whitelistUseRegexp)) {
 			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
-		this.localStorageDetail.set_lastBlockUrl(targetUrl);
+		if(this.localStorageDetail.checkUnblock()) return;
+		Note.log("ブロック " + targetUrl);
+		this.localStorageDetail.setLastBlockUrl(targetUrl);
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 	,storage_changeHandler: function(key) {
@@ -138,18 +145,92 @@ LaterPage.prototype = {
 	,__class__: LaterPage
 }
 var LocalStorageDetail = function(storage,window) {
+	Note.log("LocalStorageDetail constractor");
 	this.storage = storage;
 	window.addEventListener("storage",$bind(this,this.window_storageHandler));
 };
 LocalStorageDetail.__name__ = true;
 LocalStorageDetail.prototype = {
-	window_storageHandler_: function(key) {
-		console.log("window_storage_" + key);
+	calcTotalTime: function(date) {
+		var ans = { yesterday : 0, today : 0};
+		var lastDate = (function($this) {
+			var $r;
+			var d = new Date();
+			d.setTime($this.unblockState.switchTime);
+			$r = d;
+			return $r;
+		}(this));
+		var isSameDay = lastDate.getDay() == date.getDay();
+		if(this.unblockState.isUnblock) {
+			if(isSameDay) {
+				var nowUnblockTimeTotal = date.getTime() - this.unblockState.switchTime;
+				ans.today = this.unblockState.todayUnblockTotal + nowUnblockTimeTotal;
+				ans.yesterday = this.unblockState.yesterdayUnblockTotal;
+			} else {
+				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDay(),0,0,0).getTime();
+				ans.yesterday = this.unblockState.todayUnblockTotal + today0HourTime - this.unblockState.switchTime;
+				ans.today = date.getTime() - today0HourTime;
+			}
+		} else if(isSameDay) {
+			ans.yesterday = this.unblockState.yesterdayUnblockTotal;
+			ans.today = this.unblockState.todayUnblockTotal;
+		} else {
+			ans.yesterday = this.unblockState.todayUnblockTotal;
+			ans.today = 0;
+		}
+		return ans;
+	}
+	,checkUnblock: function() {
+		console.log("checkUnblock");
+		if(!this.unblockState.isUnblock) return false;
+		var date = new Date();
+		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;
+		console.log([date.getTime(),endTime]);
+		if(date.getTime() < endTime) return true;
+		var endDate = (function($this) {
+			var $r;
+			var d = new Date();
+			d.setTime(endTime);
+			$r = d;
+			return $r;
+		}(this));
+		var totalTimeKit = this.calcTotalTime(endDate);
+		this.unblockState = new UnblockState();
+		this.unblockState.isUnblock = false;
+		this.unblockState.switchTime = endTime;
+		this.unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+		this.unblockState.todayUnblockTotal = totalTimeKit.today;
+		this.unblockState.unblockTime = -1;
+		this.flushItem("unblockState");
+		return false;
+	}
+	,startUnblock: function(unblockTime) {
+		var date = new Date();
+		var nextUnblockState = new UnblockState();
+		nextUnblockState.isUnblock = true;
+		if(this.unblockState.isUnblock) {
+			var passing = this.unblockState.switchTime - date.getTime();
+			nextUnblockState.unblockTime = passing + unblockTime;
+			nextUnblockState.switchTime = this.unblockState.switchTime;
+			nextUnblockState.yesterdayUnblockTotal = this.unblockState.yesterdayUnblockTotal;
+			nextUnblockState.todayUnblockTotal = this.unblockState.todayUnblockTotal;
+		} else {
+			var totalTimeKit = this.calcTotalTime(date);
+			nextUnblockState.switchTime = date.getTime();
+			nextUnblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+			nextUnblockState.todayUnblockTotal = totalTimeKit.today;
+			nextUnblockState.unblockTime = unblockTime;
+		}
+		this.unblockState = nextUnblockState;
+		Note.debug("a" + Std.string(this.unblockState));
+		this.flushItem("unblockState");
+	}
+	,window_storageHandler_: function(key) {
 		this.loadData(key);
 		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
 	}
 	,window_storageHandler: function(event) {
-		console.log("window_storage " + Std.string(event));
+		Note.log("window_storage " + Std.string(event));
 		var storageEvent = event;
 		this.window_storageHandler_(storageEvent.key);
 	}
@@ -182,13 +263,13 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockUrl":
-			this.set_lastBlockUrl(null);
+			this.lastBlockUrl = null;
 			break;
 		case "unblockTimeList":
-			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
+			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.set_unblockTimeDefaultIndex(2);
+			this.unblockTimeDefaultIndex = 2;
 			break;
 		case "unblockState":
 			this.unblockState = UnblockState.createDefault();
@@ -197,13 +278,13 @@ LocalStorageDetail.prototype = {
 			this.whitelist = ["https://www.google.co.jp/search","https://www.google.co.jp/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
-			this.set_whitelistUseRegexp(false);
+			this.whitelistUseRegexp = false;
 			break;
 		case "blacklist":
 			this.blacklist = [];
 			break;
 		case "blacklistUseRegexp":
-			this.set_blacklistUseRegexp(false);
+			this.blacklistUseRegexp = false;
 			break;
 		case "laterList":
 			this.laterList = [];
@@ -236,32 +317,34 @@ LocalStorageDetail.prototype = {
 		}(this));
 	}
 	,loadData: function(key) {
+		Note.log("loadData " + key);
 		switch(key) {
 		case "version":
 			break;
 		case "lastBlockUrl":
-			this.set_lastBlockUrl(this.storage.getItem(key));
+			this.lastBlockUrl = this.storage.getItem(key);
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
 			break;
 		case "unblockTimeDefaultIndex":
-			this.set_unblockTimeDefaultIndex(Std.parseInt(this.storage.getItem(key)));
+			this.unblockTimeDefaultIndex = Std.parseInt(this.storage.getItem(key));
 			break;
 		case "unblockState":
 			this.unblockState = UnblockState.createFromJson(this.storage.getItem(key));
+			Note.debug("c" + Std.string(this.unblockState));
 			break;
 		case "whitelist":
 			this.whitelist = this.getArrayString(key);
 			break;
 		case "whitelistUseRegexp":
-			this.set_whitelistUseRegexp(this.getArrayBool(key));
+			this.whitelistUseRegexp = this.getArrayBool(key);
 			break;
 		case "blacklist":
 			this.blacklist = this.getArrayString(key);
 			break;
 		case "blacklistUseRegexp":
-			this.set_blacklistUseRegexp(this.getArrayBool(key));
+			this.blacklistUseRegexp = this.getArrayBool(key);
 			break;
 		case "laterList":
 			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
@@ -280,6 +363,7 @@ LocalStorageDetail.prototype = {
 		this.storage.setItem(key,haxe.Json.stringify(value));
 	}
 	,flushItem: function(key) {
+		Note.log("flushItem " + key);
 		switch(key) {
 		case "version":
 			this.setIntItem(key,1);
@@ -314,6 +398,7 @@ LocalStorageDetail.prototype = {
 		default:
 			throw "対応していない値です key=" + key;
 		}
+		this.window_storageHandler_(key);
 	}
 	,removeLaterList: function(value) {
 		HxOverrides.remove(this.laterList,value);
@@ -326,7 +411,7 @@ LocalStorageDetail.prototype = {
 	,getLaterList: function() {
 		return LaterPage.arrayClone(this.laterList);
 	}
-	,set_blacklistUseRegexp: function(value) {
+	,setBlacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;
 		this.flushItem("blacklistUseRegexp");
 		return this.blacklistUseRegexp;
@@ -338,14 +423,14 @@ LocalStorageDetail.prototype = {
 	,getBlacklist: function() {
 		return this.blacklist.slice();
 	}
-	,set_whitelistUseRegexp: function(value) {
+	,setWhitelistUseRegexp: function(value) {
 		this.whitelistUseRegexp = value;
 		this.flushItem("whitelistUseRegexp");
 		return this.whitelistUseRegexp;
 	}
 	,addWhitelist: function(value) {
+		Note.log("addWhitelist" + Std.string(this.whitelist));
 		this.whitelist.push(value);
-		console.log("addWhitelist" + Std.string(this.whitelist));
 		this.flushItem("whitelist");
 	}
 	,setWhitelist: function(value) {
@@ -355,14 +440,10 @@ LocalStorageDetail.prototype = {
 	,getWhitelist: function() {
 		return this.whitelist.slice();
 	}
-	,setUnblockState: function(value) {
-		this.unblockState = value;
-		this.flushItem("unblockState");
-	}
 	,getUnblockState: function() {
 		return this.unblockState.clone();
 	}
-	,set_unblockTimeDefaultIndex: function(value) {
+	,setUnblockTimeDefaultIndex: function(value) {
 		this.unblockTimeDefaultIndex = value;
 		this.flushItem("unblockTimeDefaultIndex");
 		return this.unblockTimeDefaultIndex;
@@ -374,7 +455,8 @@ LocalStorageDetail.prototype = {
 	,getUnblockTimeList: function() {
 		return this.unblockTimeList.slice();
 	}
-	,set_lastBlockUrl: function(value) {
+	,setLastBlockUrl: function(value) {
+		Note.log("set_lastBlockUrl" + value);
 		this.lastBlockUrl = value;
 		this.flushItem("lastBlockUrl");
 		return this.lastBlockUrl;
@@ -391,7 +473,7 @@ LocalStorageFactory.prototype = {
 		var version = storageDetail.getVersion();
 		if(version == -1 || forceClear) {
 			storageDetail.createAllDefault();
-			console.log("ストレージデータを生成しました");
+			Note.log("ストレージデータを生成しました");
 			version = storageDetail.getVersion();
 			isFirstChange = true;
 		}
@@ -415,6 +497,18 @@ var LocalStorageKey = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
 	return ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+}
+var Note = function() {
+};
+Note.__name__ = true;
+Note.log = function(message) {
+	console.log(message);
+}
+Note.debug = function(message) {
+	console.log("D\t" + Std.string(message));
+}
+Note.prototype = {
+	__class__: Note
 }
 var Reflect = function() { }
 Reflect.__name__ = true;
@@ -520,35 +614,34 @@ Type.enumIndex = function(e) {
 }
 var UnblockState = function() {
 	this.isUnblock = false;
-	this.todayBlockTotal = 0;
-	this.yesterdayBlockTotal = 0;
-	this.startUnblockTime = 0;
+	this.todayUnblockTotal = 0;
+	this.yesterdayUnblockTotal = 0;
+	this.switchTime = new Date().getTime();
 	this.unblockTime = 0;
-	this.startBlockTime = 0;
 };
 UnblockState.__name__ = true;
 UnblockState.createDefault = function() {
 	return new UnblockState();
 }
-UnblockState.createFromJson = function(jsonData) {
+UnblockState.createFromJson = function(jsonText) {
+	var jsonData = haxe.Json.parse(jsonText);
 	var ans = new UnblockState();
-	ans.isUnblock = jsonData.isUnblock == "true";
-	ans.todayBlockTotal = Std.parseFloat(jsonData.todayBlockTotal);
-	ans.yesterdayBlockTotal = Std.parseFloat(jsonData.yesterdayBlockTotal);
-	ans.startUnblockTime = Std.parseFloat(jsonData.startUnblockTime);
+	Note.debug(["e",jsonData.isUnblock,Type["typeof"](jsonData.isUnblock)]);
+	ans.isUnblock = jsonData.isUnblock;
+	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
+	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
+	ans.switchTime = Std.parseFloat(jsonData.switchTime);
 	ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
-	ans.startBlockTime = Std.parseFloat(jsonData.startBlockTime);
 	return ans;
 }
 UnblockState.prototype = {
 	clone: function() {
 		var ans = new UnblockState();
 		ans.isUnblock = this.isUnblock;
-		ans.todayBlockTotal = this.todayBlockTotal;
-		ans.yesterdayBlockTotal = this.yesterdayBlockTotal;
-		ans.startUnblockTime = this.startUnblockTime;
+		ans.todayUnblockTotal = this.todayUnblockTotal;
+		ans.yesterdayUnblockTotal = this.yesterdayUnblockTotal;
+		ans.switchTime = this.switchTime;
 		ans.unblockTime = this.unblockTime;
-		ans.startBlockTime = this.startBlockTime;
 		return ans;
 	}
 	,__class__: UnblockState
@@ -1039,6 +1132,8 @@ String.prototype.__class__ = String;
 String.__name__ = true;
 Array.prototype.__class__ = Array;
 Array.__name__ = true;
+Date.prototype.__class__ = Date;
+Date.__name__ = ["Date"];
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;

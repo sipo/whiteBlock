@@ -43,7 +43,7 @@ class LocalStorageFactory
 		// データが存在しない場合、初期化
 		if (version == -1 || forceClear){
 			storageDetail.createAllDefault();
-			trace("ストレージデータを生成しました");
+			Note.log("ストレージデータを生成しました");
 			version = storageDetail.getVersion();
 			isFirstChange = true;
 		}

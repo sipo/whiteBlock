@@ -28,12 +28,16 @@ class Option {
 	 */
 	public function new()
 	{
+		// データの用意
 		var factory:LocalStorageFactory = new LocalStorageFactory();
 		localStorageDetail = factory.create(storage_changeHandler, false);
-		view = new OptionView();
-		// 準備完了タイミングで初期描画
+		// viewの用意
+		view = new OptionView(this, localStorageDetail);
+		// DOMの準備完了イベント登録
 		new JQuery("document").ready(document_readyHandler);
-		Browser.window.setTimeout(window_timeoutHandler, 1000);
+		// 繰り返し処理イベント登録
+		Browser.window.setInterval(window_timeoutHandler, 1000);
+		// 
 	}
 	
 	/*
@@ -41,7 +45,8 @@ class Option {
 	 */
 	private function document_readyHandler(event:JqEvent):Void
 	{
-		view.initialize();
+		view.initialize(this);
+		view.drawUnblockState(true);
 	}
 	
 	/*
@@ -49,7 +54,24 @@ class Option {
 	 */
 	private function storage_changeHandler(key:String):Void
 	{
-		// 特になし
+		Note.log("storage_changeHandler " + key);
+		switch(key){
+			case LocalStorageKey.VERSION:
+				// 特殊なので値なし
+			case LocalStorageKey.LAST_BLOCK_URL:
+			case LocalStorageKey.UNBLOCK_TIME_LIST:
+			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
+			case LocalStorageKey.UNBLOCK_STATE:
+				view.drawUnblockState(false);
+			case LocalStorageKey.WHITELIST:
+			case LocalStorageKey.WHITELIST_USE_REGEXP:
+			case LocalStorageKey.BLACKLIST:
+			case LocalStorageKey.BLACKLIST_USE_REGEXP:
+			case LocalStorageKey.LATER_LIST:
+				view.drawLaterList();
+			default :
+				throw "対応していない値です key=" + key;
+		}
 	}
 	
 	/*
@@ -57,5 +79,18 @@ class Option {
 	 */
 	private function window_timeoutHandler():Void
 	{
+		view.drawUnblockState(false);
+	}
+	
+	/* ================================================================
+	 * Viewからの挙動（必要ならController化する
+	 */
+	
+	/**
+	 * ブロック解除開始
+	 */
+	public function unblock_clickHandler(unblockTime:Float):Void
+	{
+		localStorageDetail.startUnblock(unblockTime);
 	}
 }
