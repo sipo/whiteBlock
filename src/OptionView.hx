@@ -1,4 +1,6 @@
 package ;
+import commonView.UnblockTimeDownList;
+import commonView.TimeManager;import commonView.TimeManager;
 import haxe.Template;
 import haxe.Template;
 import js.JQuery.JqEvent;
@@ -14,13 +16,14 @@ class OptionView {
 	/* 最終描画のブロック状態がどうなっているか */
 	private var lastDisplayIsUnblock:Bool;
 	
+	
 	/* --------------------------------
-	 * DOMパーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
+	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
 	 */
 	
 	private var blockDisplay_switch:JQuery;    // ブロック時に表示するエリア
 	private var blockTime_text:JQuery;       // ブロックしている時間の表示
-	private var unblockTime_select:JQuery;     // ブロック解除する時間
+	private var unblockTime:UnblockTimeDownList;     // ブロック解除する時間
 	private var unblock_clickable:JQuery;         // ブロック解除開始リンク
 	
 	private var unblockDisplay_switch:JQuery;  // ブロック解除時に表示するエリア
@@ -31,19 +34,14 @@ class OptionView {
 	private var laterKits:Array<LaterKit>; // 追加されたあとで見るリストの１つずつの情報
 	
 	private var unblockTimeList_textArea:JQuery; // ブロック解除時間の入力フィールド
-	private var unblockTimeDefaultIndex_select:JQuery; // ブロック解除時間のデフォルト選択プルダウン
-	private var unblockTimeDefaultIndexes_option:Array<JQuery>;
+	private var unblockTimeDefaultIndex:UnblockTimeDownList; // ブロック解除時間のデフォルト選択プルダウン
 	private var whitelist_textArea:JQuery; // 
 	private var whitelistUseRegexp_checkbox:JQuery; // 
 	private var blacklist_textArea:JQuery; // 
 	private var blacklistUseRegexp_checkbox:JQuery; // 
 	
-	// <option value="::time::">::text::</option>
-	private var unblockTimeTemplate:Template;
 	// <li class="laterUrl"><a href="::url::" class="laterUrlLink">::titleAndUrl::</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
 	private var laterKitBase:Template;
-	// <option value="::index::">::time::</option>
-	private var unblockTimeDefaultIndexOptionTemplate:Template;
 	
 	private var save_clickable:JQuery; // セーブボタン
 	
@@ -73,7 +71,7 @@ class OptionView {
 		// DOMの初期化
 		blockDisplay_switch = new JQuery("#blockDisplay");
 		blockTime_text = new JQuery("#blockTime");
-		unblockTime_select = new JQuery("#unblockTime");
+		unblockTime = new UnblockTimeDownList(new JQuery("#unblockTime"));
 		unblock_clickable = new JQuery("#unblock");
 		
 		unblockDisplay_switch = new JQuery("#unblockDisplay");
@@ -84,8 +82,7 @@ class OptionView {
 		laterKits = [];
 		
 		unblockTimeList_textArea = new JQuery("#unblockTimeList");
-		unblockTimeDefaultIndex_select = new JQuery("#unblockTimeDefaultIndex");
-		unblockTimeDefaultIndexes_option = [];
+		unblockTimeDefaultIndex = new UnblockTimeDownList(new JQuery("#unblockTimeDefaultIndex"));
 		whitelist_textArea = new JQuery("#whitelist");
 		whitelistUseRegexp_checkbox = new JQuery("#whitelistUseRegexp");
 		blacklist_textArea = new JQuery("#blacklist");
@@ -93,12 +90,8 @@ class OptionView {
 		save_clickable = new JQuery("#save");
 		
 		// テンプレート情報を取得し、中身のHTMLを削除
-		unblockTimeTemplate = new Template(unblockTime_select.html());
-		unblockTime_select.html("");
 		laterKitBase = new Template(laterList_container.html());
 		laterList_container.html("");
-		unblockTimeDefaultIndexOptionTemplate = new Template(unblockTimeDefaultIndex_select.html());
-		unblockTimeDefaultIndex_select.html("");
 		
 		// イベントの登録
 		unblock_clickable.click(unblock_clickHandler);
@@ -134,18 +127,11 @@ class OptionView {
 				blockTime_text.html("--- ");
 			}else{
 				var time:Float = date.getTime() - unblockState.switchTime;
-				blockTime_text.html(timeDisplay(time, true));
+				blockTime_text.html(TimeManager.displayText(time, true));
 			}
 			if (full){
 				// ブロック解除時間のリストを描画
-				var innerHtml:String = "";
-				for (unblockTimeI in 0...unblockTimeList.length) {
-					var value = unblockTimeList[unblockTimeI];
-					var context:UnblockTimeContext = {time:Std.string(value), text:timeDisplay(value, false)};
-					innerHtml += unblockTimeTemplate.execute(context);
-				}
-				unblockTime_select.html(innerHtml);	// html描画
-				unblockTime_select.val(Std.string(unblockTimeList[localStorageDetail.unblockTimeDefaultIndex]));	// デフォルト選択
+				unblockTime.draw(unblockTimeList, localStorageDetail.unblockTimeDefaultIndex);
 			}
 		}else{
 			// ブロック解除中
@@ -156,7 +142,7 @@ class OptionView {
 			}
 			// 残り時間の表示
 			var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			unblockTimeLeft_text.html(timeDisplay(time, true));
+			unblockTimeLeft_text.html(TimeManager.displayText(time, true));
 		}
 	}
 	
@@ -195,7 +181,7 @@ class OptionView {
 	private function unblock_clickHandler(event:JqEvent):Void
 	{
 		Note.log("unblock_clickHandler");
-		option.unblock_clickHandler(Std.parseFloat(unblockTime_select.val()));
+		option.unblock_clickHandler(unblockTime.getValue());
 	}
 	
 	/*
@@ -251,40 +237,13 @@ class OptionView {
 	 * 内部処理
 	 */
 	
-	/*
-	 * 時間の文字列表示
-	 */
-	private function timeDisplay(time:Float, useSeconds:Bool):String
-	{
-		var seconds:Int = Std.int(time / 1000) % 60;
-		var minutes:Int = Std.int(time / 1000 / 60) % 60;
-		var hours:Int = Std.int(time / 1000 / 60 / 60);
-//		return hours + ":" + minutes;
-		if (hours == 0){
-			if (useSeconds) return minutes + "分" + seconds + "秒";
-			return minutes + "分";
-		}
-		if (minutes == 0){
-			return hours + "時間";
-		}
-		return hours + "時間" + minutes + "分";
-	}
 	
 }
 private typedef LaterKit = {
 	laterUrlLink_clickable:js.JQuery,
 	deleteLaterUrl_clickable:js.JQuery
 }
-private typedef UnblockTimeContext = {
-	time:String,
-	text:String
-}
 private typedef LaterKitContext = {
 	url:String,
 	titleAndUrl:String
 }
-private typedef UnblockTimeDefaultIndexOptionContext = {
-	index:String,
-	text:String
-}
-

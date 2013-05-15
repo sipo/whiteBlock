@@ -567,18 +567,7 @@ var OptionView = function(option,localStorageDetail) {
 };
 OptionView.__name__ = true;
 OptionView.prototype = {
-	timeDisplay: function(time,useSeconds) {
-		var seconds = (time / 1000 | 0) % 60;
-		var minutes = (time / 1000 / 60 | 0) % 60;
-		var hours = time / 1000 / 60 / 60 | 0;
-		if(hours == 0) {
-			if(useSeconds) return minutes + "分" + seconds + "秒";
-			return minutes + "分";
-		}
-		if(minutes == 0) return hours + "時間";
-		return hours + "時間" + minutes + "分";
-	}
-	,body_unloadHandler: function(event) {
+	body_unloadHandler: function(event) {
 	}
 	,save_clickHandler: function(event) {
 		Note.log("save_clickHandler");
@@ -597,7 +586,7 @@ OptionView.prototype = {
 	}
 	,unblock_clickHandler: function(event) {
 		Note.log("unblock_clickHandler");
-		this.option.unblock_clickHandler(Std.parseFloat(this.unblockTime_select.val()));
+		this.option.unblock_clickHandler(this.unblockTime.getValue());
 	}
 	,drawUnblockTimeDefault: function() {
 	}
@@ -621,34 +610,23 @@ OptionView.prototype = {
 			}
 			if(unblockState.switchTime == -1) this.blockTime_text.html("--- "); else {
 				var time = date.getTime() - unblockState.switchTime;
-				this.blockTime_text.html(this.timeDisplay(time,true));
+				this.blockTime_text.html(commonView.TimeManager.displayText(time,true));
 			}
-			if(full) {
-				var innerHtml = "";
-				var _g1 = 0, _g = unblockTimeList.length;
-				while(_g1 < _g) {
-					var unblockTimeI = _g1++;
-					var value = unblockTimeList[unblockTimeI];
-					var context = { time : Std.string(value), text : this.timeDisplay(value,false)};
-					innerHtml += this.unblockTimeTemplate.execute(context);
-				}
-				this.unblockTime_select.html(innerHtml);
-				this.unblockTime_select.val(Std.string(unblockTimeList[this.localStorageDetail.unblockTimeDefaultIndex]));
-			}
+			if(full) this.unblockTime.draw(unblockTimeList,this.localStorageDetail.unblockTimeDefaultIndex);
 		} else {
 			if(full) {
 				this.blockDisplay_switch.hide();
 				this.unblockDisplay_switch.show();
 			}
 			var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			this.unblockTimeLeft_text.html(this.timeDisplay(time,true));
+			this.unblockTimeLeft_text.html(commonView.TimeManager.displayText(time,true));
 		}
 	}
 	,initialize: function(option) {
 		console.log("optionView initialize");
 		this.blockDisplay_switch = new js.JQuery("#blockDisplay");
 		this.blockTime_text = new js.JQuery("#blockTime");
-		this.unblockTime_select = new js.JQuery("#unblockTime");
+		this.unblockTime = new commonView.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.unblock_clickable = new js.JQuery("#unblock");
 		this.unblockDisplay_switch = new js.JQuery("#unblockDisplay");
 		this.unblockTimeLeft_text = new js.JQuery("#unblockTimeLeft");
@@ -656,19 +634,14 @@ OptionView.prototype = {
 		this.laterList_container = new js.JQuery("#laterList");
 		this.laterKits = [];
 		this.unblockTimeList_textArea = new js.JQuery("#unblockTimeList");
-		this.unblockTimeDefaultIndex_select = new js.JQuery("#unblockTimeDefaultIndex");
-		this.unblockTimeDefaultIndexes_option = [];
+		this.unblockTimeDefaultIndex = new commonView.UnblockTimeDownList(new js.JQuery("#unblockTimeDefaultIndex"));
 		this.whitelist_textArea = new js.JQuery("#whitelist");
 		this.whitelistUseRegexp_checkbox = new js.JQuery("#whitelistUseRegexp");
 		this.blacklist_textArea = new js.JQuery("#blacklist");
 		this.blacklistUseRegexp_checkbox = new js.JQuery("#blacklistUseRegexp");
 		this.save_clickable = new js.JQuery("#save");
-		this.unblockTimeTemplate = new haxe.Template(this.unblockTime_select.html());
-		this.unblockTime_select.html("");
 		this.laterKitBase = new haxe.Template(this.laterList_container.html());
 		this.laterList_container.html("");
-		this.unblockTimeDefaultIndexOptionTemplate = new haxe.Template(this.unblockTimeDefaultIndex_select.html());
-		this.unblockTimeDefaultIndex_select.html("");
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
 		this.endUnblock_clickable.click($bind(this,this.endUnblock_clickHandler));
 	}
@@ -812,6 +785,44 @@ UnblockState.prototype = {
 		return ans;
 	}
 	,__class__: UnblockState
+}
+var commonView = commonView || {}
+commonView.TimeManager = function() { }
+commonView.TimeManager.__name__ = true;
+commonView.TimeManager.displayText = function(time,useSeconds) {
+	var seconds = (time / 1000 | 0) % 60;
+	var minutes = (time / 1000 / 60 | 0) % 60;
+	var hours = time / 1000 / 60 / 60 | 0;
+	if(hours == 0) {
+		if(useSeconds) return minutes + "分" + seconds + "秒";
+		return minutes + "分";
+	}
+	if(minutes == 0) return hours + "時間";
+	return hours + "時間" + minutes + "分";
+}
+commonView.UnblockTimeDownList = function(dom) {
+	this.dom = dom;
+	this.optionTemplate = new haxe.Template(dom.html());
+	dom.html("");
+};
+commonView.UnblockTimeDownList.__name__ = true;
+commonView.UnblockTimeDownList.prototype = {
+	getValue: function() {
+		return Std.parseFloat(this.dom.val());
+	}
+	,draw: function(timeList,defaultIndex) {
+		var innerHtml = "";
+		var _g1 = 0, _g = timeList.length;
+		while(_g1 < _g) {
+			var unblockTimeI = _g1++;
+			var value = timeList[unblockTimeI];
+			var context = { time : Std.string(value), text : commonView.TimeManager.displayText(value,false)};
+			innerHtml += this.optionTemplate.execute(context);
+		}
+		this.dom.html(innerHtml);
+		this.dom.val(Std.string(timeList[defaultIndex]));
+	}
+	,__class__: commonView.UnblockTimeDownList
 }
 var haxe = haxe || {}
 haxe.Json = function() {
