@@ -1,10 +1,18 @@
 package ;
-import commonView.UnblockTimeDownList;
-import commonView.TimeManager;import commonView.TimeManager;
+import common.UnblockTimeDownList;
+import common.StringUtil;import common.StringUtil;
 import haxe.Template;
 import haxe.Template;
 import js.JQuery.JqEvent;
 import js.JQuery;
+private typedef LaterKit = {
+	laterUrlLink_clickable:js.JQuery,
+	deleteLaterUrl_clickable:js.JQuery
+}
+private typedef LaterKitContext = {
+	url:String,
+	titleAndUrl:String
+}
 class OptionView {
 
 	/* オプション本体。依存を消す場合はexternなどを使う */
@@ -127,7 +135,7 @@ class OptionView {
 				blockTime_text.html("--- ");
 			}else{
 				var time:Float = date.getTime() - unblockState.switchTime;
-				blockTime_text.html(TimeManager.displayText(time, true));
+				blockTime_text.html(StringUtil.timeDisplay(time, true));
 			}
 			if (full){
 				// ブロック解除時間のリストを描画
@@ -142,7 +150,7 @@ class OptionView {
 			}
 			// 残り時間の表示
 			var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			unblockTimeLeft_text.html(TimeManager.displayText(time, true));
+			unblockTimeLeft_text.html(StringUtil.timeDisplay(time, true));
 		}
 	}
 	
@@ -238,12 +246,4 @@ class OptionView {
 	 */
 	
 	
-}
-private typedef LaterKit = {
-	laterUrlLink_clickable:js.JQuery,
-	deleteLaterUrl_clickable:js.JQuery
-}
-private typedef LaterKitContext = {
-	url:String,
-	titleAndUrl:String
 }

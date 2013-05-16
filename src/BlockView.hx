@@ -1,9 +1,18 @@
 package ;
-import commonView.UnblockTimeDownList;
+import common.StringUtil;
+import haxe.web.Dispatch;
+import haxe.Template;
+import common.UnblockTimeDownList;
 import js.JQuery;
+private typedef LastPageContext = {
+	urlFull:String,
+	urlShort:String,
+	title:String
+}
+
 class BlockView {
 	
-	/* Blockページ */
+	/* Block */
 	private var block:Block;
 	
 	/* データ本体。ここで操作したらダメ（本来は依存を消すべきだけど、とりあえず規約で止める） */
@@ -13,8 +22,9 @@ class BlockView {
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
 	 */
 	
-	private var title_text:JQuery;	// タイトル表示
-	private var url_text:JQuery;	// url表示
+	private var lastPage_container:JQuery;	// ブロック情報表示
+//  <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
+	private var lastPageBase:Template;
 	
 	private var addLaterList_clickable:JQuery;	// あとで見る追加ボタン
 	
@@ -31,6 +41,9 @@ class BlockView {
 	
 	private static inline var ADD_WHITELIST_TEXT_MAX_SIZE:Int = 100;
 	
+	private static inline var URL_LIMIT:Int = 100;
+	private static inline var TITLE_LIMIT:Int = 100;
+	
 	public function new(block:Block, localStorageDetail:LocalStorageDetail)
 	{
 		this.block = block;
@@ -42,9 +55,14 @@ class BlockView {
 	 */
 	public function initialize()
 	{
+		// ページ情報の取得
+		
+		
 		// DOMの初期化
-		title_text = new JQuery("#title");
-		url_text = new JQuery("#url");
+		lastPage_container = new JQuery("#targetPage");
+		// テンプレート情報を取得し、中身のHTMLを削除
+		lastPageBase = new Template(lastPage_container.html());
+		lastPage_container.html("");
 		
 		addLaterList_clickable = new JQuery("#addLaterList");
 		
@@ -68,9 +86,8 @@ class BlockView {
 	{
 		Note.log("draw");
 		// 基本情報表示
-		title_text.text(lastBlockPage.title);
-		url_text.text(lastBlockPage.url);
-		
+		var context:LastPageContext = {urlFull:lastBlockPage.url, urlShort:StringUtil.limit(lastBlockPage.url, URL_LIMIT), title:StringUtil.limit(lastBlockPage.title, URL_LIMIT)};
+		lastPage_container.html(lastPageBase.execute(context));
 		
 		// ブロック解除
 		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultIndex);

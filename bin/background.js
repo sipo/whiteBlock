@@ -31,7 +31,6 @@ Background.prototype = {
 		return false;
 	}
 	,tab_updatedHandler: function(tabId,changedInfo,tab) {
-		Note.debug(changedInfo);
 		if(changedInfo.status != "complete") return;
 		Note.log("tab_updated");
 		var targetUrl = tab.url;
@@ -55,8 +54,6 @@ Background.prototype = {
 			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
 		if(this.localStorageDetail.checkUnblock()) return;
-		Note.log("ブロック " + targetUrl);
-		this.localStorageDetail.setLastBlockPage(new Page(tab.title,targetUrl));
 		var params = new haxe.ds.StringMap();
 		params.set("title",tab.title);
 		params.set("url",targetUrl);
@@ -67,7 +64,7 @@ Background.prototype = {
 			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));
 		}
 		blockUrl += "?" + paramsStrings.join("&");
-		Note.debug(Std.string(blockUrl));
+		Note.log("ブロック " + targetUrl);
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 	,storage_changeHandler: function(key) {
@@ -216,7 +213,7 @@ LocalStorageDetail.prototype = {
 		this.callbackStorageChange = callbackStorageChange;
 	}
 	,loadAllValue: function() {
-		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -224,7 +221,7 @@ LocalStorageDetail.prototype = {
 		}
 	}
 	,createAllDefault: function() {
-		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -239,9 +236,6 @@ LocalStorageDetail.prototype = {
 	,createDefault: function(key) {
 		switch(key) {
 		case "version":
-			break;
-		case "lastBlockPage":
-			this.lastBlockPage = new Page("","");
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -302,9 +296,6 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockPage":
-			this.lastBlockPage = Page.createFromJson(this.getObject(key));
-			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
 			break;
@@ -347,9 +338,6 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			this.setIntItem(key,1);
-			break;
-		case "lastBlockPage":
-			this.setJsonItem(key,this.lastBlockPage);
 			break;
 		case "unblockTimeList":
 			this.setJsonItem(key,this.unblockTimeList);
@@ -435,21 +423,6 @@ LocalStorageDetail.prototype = {
 	,getUnblockTimeList: function() {
 		return this.unblockTimeList.slice();
 	}
-	,setLastBlockTitle: function(value) {
-		Note.log("setLastBlockTitle" + value);
-		this.lastBlockTitle = value;
-		this.flushItem("lastBlockPage");
-		return this.lastBlockTitle;
-	}
-	,setLastBlockPage: function(value) {
-		Note.log("setLastBlockPage" + Std.string(value));
-		this.lastBlockPage = value;
-		this.flushItem("lastBlockPage");
-		return this.lastBlockPage;
-	}
-	,getLastBlockPage: function() {
-		return this.lastBlockPage.clone();
-	}
 	,__class__: LocalStorageDetail
 }
 var LocalStorageFactory = $hxClasses["LocalStorageFactory"] = function() {
@@ -485,7 +458,7 @@ LocalStorageFactory.prototype = {
 var LocalStorageKey = $hxClasses["LocalStorageKey"] = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
-	return ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+	return ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
 var Note = $hxClasses["Note"] = function() {
 };
@@ -1237,7 +1210,6 @@ js.JQuery = q;
 Background.DEBUG_CLEAR_DATA = true;
 LocalStorageDetail.STORAGE_VERSION = 1;
 LocalStorageKey.VERSION = "version";
-LocalStorageKey.LAST_BLOCK_PAGE = "lastBlockPage";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
 LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
 LocalStorageKey.UNBLOCK_STATE = "unblockState";

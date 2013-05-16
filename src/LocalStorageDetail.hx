@@ -22,30 +22,6 @@ class LocalStorageDetail {
 	 * 実データと、設定
 	 */
 	
-	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
-	private var lastBlockPage:Page;
-	public function getLastBlockPage():Page
-	{
-		return lastBlockPage.clone();
-	}
-	public function setLastBlockPage(value:Page):Page
-	{
-		Note.log("setLastBlockPage" + value);
-		lastBlockPage = value;
-		flushItem(LocalStorageKey.LAST_BLOCK_PAGE);	// Storageへ反映
-		return lastBlockPage;
-	}
-	
-	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
-	public var lastBlockTitle(default, null):String;
-	public function setLastBlockTitle(value:String):String
-	{
-		Note.log("setLastBlockTitle" + value);
-		lastBlockTitle = value;
-		flushItem(LocalStorageKey.LAST_BLOCK_PAGE);	// Storageへ反映
-		return lastBlockTitle;
-	}
-	
 	/** ブロック解除の選択時間リスト */
 	private var unblockTimeList:Array<Float>;
 	public function getUnblockTimeList():Array<Float>
@@ -150,8 +126,6 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				setIntItem(key, STORAGE_VERSION);
-			case LocalStorageKey.LAST_BLOCK_PAGE:
-				setJsonItem(key, lastBlockPage);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				setJsonItem(key, unblockTimeList);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
@@ -197,8 +171,6 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = Page.createFromJson(getObject(key));
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
@@ -246,8 +218,6 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = new Page("", "");
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
 					5 * 1000,

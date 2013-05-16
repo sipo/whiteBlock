@@ -1,7 +1,6 @@
 package ;
 class LocalStorageKey {
 	public static inline var VERSION:String = "version";
-	public static inline var LAST_BLOCK_PAGE:String = "lastBlockPage";
 	public static inline var UNBLOCK_TIME_LIST:String = "unblockTimeList";
 	public static inline var UNBLOCK_TIME_DEFAULT_INDEX:String = "unblockTimeDefaultIndex";
 	public static inline var UNBLOCK_STATE:String = "unblockState";
@@ -14,7 +13,6 @@ class LocalStorageKey {
 	public static inline function KEY_LIST():Array<String>{
 		return [
 			VERSION,
-			LAST_BLOCK_PAGE,
 			UNBLOCK_TIME_LIST,
 			UNBLOCK_TIME_DEFAULT_INDEX,
 			UNBLOCK_STATE,

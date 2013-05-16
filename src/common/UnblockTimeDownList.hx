@@ -1,4 +1,4 @@
-package commonView;
+package common;
 import haxe.Template;
 import js.JQuery;
 /*
@@ -31,7 +31,7 @@ class UnblockTimeDownList {
 		var innerHtml:String = "";
 		for (unblockTimeI in 0...timeList.length) {
 			var value = timeList[unblockTimeI];
-			var context:OptionContext = {time:Std.string(value), text:TimeManager.displayText(value, false)};
+			var context:OptionContext = {time:Std.string(value), text:StringUtil.timeDisplay(value, false)};
 			innerHtml += optionTemplate.execute(context);
 		}
 		dom.html(innerHtml);	// html描画

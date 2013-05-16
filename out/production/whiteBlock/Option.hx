@@ -62,7 +62,6 @@ class Option {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_PAGE:
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 			case LocalStorageKey.UNBLOCK_STATE:

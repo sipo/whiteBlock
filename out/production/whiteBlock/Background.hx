@@ -53,7 +53,6 @@ class Background
 	 */
 	private function tab_updatedHandler(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
-		Note.debug(changedInfo);
 		if (changedInfo.status != "complete") return;
 		Note.log("tab_updated");
 		
@@ -76,10 +75,6 @@ class Background
 			Note.log("webページじゃない場合除外");	// あとで、httpsはオプション設定にするべきかも
 			return;
 		}
-//		if (targetUrl != "http://b.hatena.ne.jp/tail_y/"){
-//			trace("テストページじゃない場合除外");	// 開発用にテストページに限定する
-//			return;
-//		}
 		
 		// 裏で変更があった場合、タブイベントとstorageイベントは前後する可能性があるので、ロードを挟む
 		localStorageDetail.loadAllValue();
@@ -90,12 +85,9 @@ class Background
 		}
 		// ブロック解除中ならブロックしない
 		if (localStorageDetail.checkUnblock()) return;
-		// ページをブロックする
-		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
-		Note.log("ブロック " + targetUrl);
-		localStorageDetail.setLastBlockPage(new Page(tab.title, targetUrl));
+		// ページをブロックする（ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用）
 		
-		// ブロックページの表示
+		// ブロックページの準備
 		var params:StringMap<String> = new StringMap<String>();
 		params.set("title", tab.title);
 		params.set("url", targetUrl);
@@ -104,7 +96,8 @@ class Background
 			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));
 		}
 		blockUrl += "?" + paramsStrings.join("&");
-		Note.debug(Std.string(blockUrl));
+		// タブを遷移させることでブロック
+		Note.log("ブロック " + targetUrl);
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	/*

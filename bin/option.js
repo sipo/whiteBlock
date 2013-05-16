@@ -200,7 +200,7 @@ LocalStorageDetail.prototype = {
 		this.callbackStorageChange = callbackStorageChange;
 	}
 	,loadAllValue: function() {
-		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -208,7 +208,7 @@ LocalStorageDetail.prototype = {
 		}
 	}
 	,createAllDefault: function() {
-		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -223,9 +223,6 @@ LocalStorageDetail.prototype = {
 	,createDefault: function(key) {
 		switch(key) {
 		case "version":
-			break;
-		case "lastBlockPage":
-			this.lastBlockPage = new Page("","");
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -286,9 +283,6 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockPage":
-			this.lastBlockPage = Page.createFromJson(this.getObject(key));
-			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
 			break;
@@ -331,9 +325,6 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			this.setIntItem(key,1);
-			break;
-		case "lastBlockPage":
-			this.setJsonItem(key,this.lastBlockPage);
 			break;
 		case "unblockTimeList":
 			this.setJsonItem(key,this.unblockTimeList);
@@ -419,21 +410,6 @@ LocalStorageDetail.prototype = {
 	,getUnblockTimeList: function() {
 		return this.unblockTimeList.slice();
 	}
-	,setLastBlockTitle: function(value) {
-		Note.log("setLastBlockTitle" + value);
-		this.lastBlockTitle = value;
-		this.flushItem("lastBlockPage");
-		return this.lastBlockTitle;
-	}
-	,setLastBlockPage: function(value) {
-		Note.log("setLastBlockPage" + Std.string(value));
-		this.lastBlockPage = value;
-		this.flushItem("lastBlockPage");
-		return this.lastBlockPage;
-	}
-	,getLastBlockPage: function() {
-		return this.lastBlockPage.clone();
-	}
 	,__class__: LocalStorageDetail
 }
 var LocalStorageFactory = function() {
@@ -469,7 +445,7 @@ LocalStorageFactory.prototype = {
 var LocalStorageKey = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
-	return ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+	return ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
 var Note = function() {
 };
@@ -508,8 +484,6 @@ Option.prototype = {
 		Note.log("storage_changeHandler " + key);
 		switch(key) {
 		case "version":
-			break;
-		case "lastBlockPage":
 			break;
 		case "unblockTimeList":
 			break;
@@ -589,7 +563,7 @@ OptionView.prototype = {
 			}
 			if(unblockState.switchTime == -1) this.blockTime_text.html("--- "); else {
 				var time = date.getTime() - unblockState.switchTime;
-				this.blockTime_text.html(commonView.TimeManager.displayText(time,true));
+				this.blockTime_text.html(common.StringUtil.timeDisplay(time,true));
 			}
 			if(full) this.unblockTime.draw(unblockTimeList,this.localStorageDetail.unblockTimeDefaultIndex);
 		} else {
@@ -598,14 +572,14 @@ OptionView.prototype = {
 				this.unblockDisplay_switch.show();
 			}
 			var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			this.unblockTimeLeft_text.html(commonView.TimeManager.displayText(time,true));
+			this.unblockTimeLeft_text.html(common.StringUtil.timeDisplay(time,true));
 		}
 	}
 	,initialize: function() {
 		console.log("optionView initialize");
 		this.blockDisplay_switch = new js.JQuery("#blockDisplay");
 		this.blockTime_text = new js.JQuery("#blockTime");
-		this.unblockTime = new commonView.UnblockTimeDownList(new js.JQuery("#unblockTime"));
+		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.unblock_clickable = new js.JQuery("#unblock");
 		this.unblockDisplay_switch = new js.JQuery("#unblockDisplay");
 		this.unblockTimeLeft_text = new js.JQuery("#unblockTimeLeft");
@@ -613,7 +587,7 @@ OptionView.prototype = {
 		this.laterList_container = new js.JQuery("#laterList");
 		this.laterKits = [];
 		this.unblockTimeList_textArea = new js.JQuery("#unblockTimeList");
-		this.unblockTimeDefaultIndex = new commonView.UnblockTimeDownList(new js.JQuery("#unblockTimeDefaultIndex"));
+		this.unblockTimeDefaultIndex = new common.UnblockTimeDownList(new js.JQuery("#unblockTimeDefaultIndex"));
 		this.whitelist_textArea = new js.JQuery("#whitelist");
 		this.whitelistUseRegexp_checkbox = new js.JQuery("#whitelistUseRegexp");
 		this.blacklist_textArea = new js.JQuery("#blacklist");
@@ -802,10 +776,10 @@ UnblockState.prototype = {
 	}
 	,__class__: UnblockState
 }
-var commonView = commonView || {}
-commonView.TimeManager = function() { }
-commonView.TimeManager.__name__ = true;
-commonView.TimeManager.displayText = function(time,useSeconds) {
+var common = common || {}
+common.StringUtil = function() { }
+common.StringUtil.__name__ = true;
+common.StringUtil.timeDisplay = function(time,useSeconds) {
 	var seconds = (time / 1000 | 0) % 60;
 	var minutes = (time / 1000 / 60 | 0) % 60;
 	var hours = time / 1000 / 60 / 60 | 0;
@@ -816,13 +790,17 @@ commonView.TimeManager.displayText = function(time,useSeconds) {
 	if(minutes == 0) return hours + "時間";
 	return hours + "時間" + minutes + "分";
 }
-commonView.UnblockTimeDownList = function(dom) {
+common.StringUtil.limit = function(original,max) {
+	if(original.length <= max) return original;
+	return HxOverrides.substr(original,0,max - 3) + "...";
+}
+common.UnblockTimeDownList = function(dom) {
 	this.dom = dom;
 	this.optionTemplate = new haxe.Template(dom.html());
 	dom.html("");
 };
-commonView.UnblockTimeDownList.__name__ = true;
-commonView.UnblockTimeDownList.prototype = {
+common.UnblockTimeDownList.__name__ = true;
+common.UnblockTimeDownList.prototype = {
 	getValue: function() {
 		return Std.parseFloat(this.dom.val());
 	}
@@ -832,13 +810,13 @@ commonView.UnblockTimeDownList.prototype = {
 		while(_g1 < _g) {
 			var unblockTimeI = _g1++;
 			var value = timeList[unblockTimeI];
-			var context = { time : Std.string(value), text : commonView.TimeManager.displayText(value,false)};
+			var context = { time : Std.string(value), text : common.StringUtil.timeDisplay(value,false)};
 			innerHtml += this.optionTemplate.execute(context);
 		}
 		this.dom.html(innerHtml);
 		this.dom.val(Std.string(timeList[defaultIndex]));
 	}
-	,__class__: commonView.UnblockTimeDownList
+	,__class__: common.UnblockTimeDownList
 }
 var haxe = haxe || {}
 haxe.Json = function() {
@@ -1715,7 +1693,6 @@ var q = window.jQuery;
 js.JQuery = q;
 LocalStorageDetail.STORAGE_VERSION = 1;
 LocalStorageKey.VERSION = "version";
-LocalStorageKey.LAST_BLOCK_PAGE = "lastBlockPage";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
 LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
 LocalStorageKey.UNBLOCK_STATE = "unblockState";
@@ -1724,6 +1701,8 @@ LocalStorageKey.WHITELIST_USE_REGEXP = "whitelistUseRegexp";
 LocalStorageKey.BLACKLIST = "blacklist";
 LocalStorageKey.BLACKLIST_USE_REGEXP = "blacklistUseRegexp";
 LocalStorageKey.LATER_LIST = "laterList";
+common.StringUtil.DOT_NUM = 3;
+common.StringUtil.DOTS = "...";
 haxe.Template.splitter = new EReg("(::[A-Za-z0-9_ ()&|!+=/><*.\"-]+::|\\$\\$([A-Za-z0-9_-]+)\\()","");
 haxe.Template.expr_splitter = new EReg("(\\(|\\)|[ \r\n\t]*\"[^\"]*\"[ \r\n\t]*|[!+=/><*.&|-]+)","");
 haxe.Template.expr_trim = new EReg("^[ ]*([^ ]+)[ ]*$","");
