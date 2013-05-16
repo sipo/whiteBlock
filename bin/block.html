@@ -7,6 +7,7 @@
     </head>
     <body>
         <h1>このページはWhiteBlockによってブロックされました。</h1>
+        <p id="blockTime"><small>ブロック時間::time::経過</small></p>
         <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
         <h2>以下から動作を選んで下さい。</h2>
         <ul>
@@ -18,7 +19,7 @@
                 <p><a href="#" id="unblock">少しだけブロックを解除する</a></p>
                 <label for="unblockTime">解除する時間</label>
                 <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
-                <p>前回は<small><span id="blockTime">00時間00分</span>前に解除しています</small></p>
+                <p id="todayUnblockTotal"><small>今日は合計::time::解除しています</small></p>
             </li>
             <li>
                 <p><a href="#" id="addWhiteList">ホワイトリストに追加する</a></p>

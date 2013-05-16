@@ -96,6 +96,7 @@ class Block
 	public function startUnblock(unblockTime:Float):Void
 	{
 		localStorageDetail.startUnblock(unblockTime);
+		Browser.window.location.assign(lastBlockPage.url);
 	}
 	
 	/*

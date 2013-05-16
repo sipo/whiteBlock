@@ -19,6 +19,7 @@ Block.prototype = {
 	}
 	,startUnblock: function(unblockTime) {
 		this.localStorageDetail.startUnblock(unblockTime);
+		js.Browser.window.location.assign(this.lastBlockPage.url);
 	}
 	,addLaterList: function() {
 		this.localStorageDetail.addLaterList(this.lastBlockPage.clone());
@@ -52,27 +53,39 @@ BlockView.prototype = {
 	}
 	,addLaterList_clickHandler: function(event) {
 	}
-	,draw: function(lastBlockPage) {
+	,draw: function(targetPage) {
 		Note.log("draw");
-		var context = { urlFull : lastBlockPage.url, urlShort : common.StringUtil.limit(lastBlockPage.url,100), title : common.StringUtil.limit(lastBlockPage.title,100)};
-		this.lastPage_container.html(this.lastPageBase.execute(context));
+		var date = new Date();
+		var unblockState = this.localStorageDetail.getUnblockState();
+		var blockTime = date.getTime() - unblockState.switchTime;
+		var blockTimeContext = { time : common.StringUtil.timeDisplay(blockTime,false)};
+		this.blockTime_container.html(this.blockTimeBase.execute(blockTimeContext));
+		var targetPageContext = { urlFull : targetPage.url, urlShort : common.StringUtil.limit(targetPage.url,100), title : common.StringUtil.limit(targetPage.title,100)};
+		this.targetPage_container.html(this.targetPageBase.execute(targetPageContext));
 		this.unblockTime.draw(this.localStorageDetail.getUnblockTimeList(),this.localStorageDetail.unblockTimeDefaultIndex);
-		var url = lastBlockPage.url;
+		var todayUnblockTotalContext = { time : common.StringUtil.timeDisplay(unblockState.todayUnblockTotal,false)};
+		this.todayUnblockTotal_container.html(this.todayUnblockTotalBase.execute(todayUnblockTotalContext));
+		var url = targetPage.url;
 		this.addWhitelistText_input.val(url);
 		var fieldSize = url.length;
 		if(100 < fieldSize) fieldSize = 100;
 		this.addWhitelistText_input.attr("size",fieldSize);
 	}
 	,initialize: function() {
-		this.lastPage_container = new js.JQuery("#targetPage");
-		this.lastPageBase = new haxe.Template(this.lastPage_container.html());
-		this.lastPage_container.html("");
+		this.blockTime_container = new js.JQuery("#blockTime");
+		this.targetPage_container = new js.JQuery("#targetPage");
 		this.addLaterList_clickable = new js.JQuery("#addLaterList");
-		this.blockTime_text = new js.JQuery("#blockTime");
-		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.unblock_clickable = new js.JQuery("#unblock");
+		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
+		this.todayUnblockTotal_container = new js.JQuery("#todayUnblockTotal");
 		this.addWhiteList_clickable = new js.JQuery("#addWhiteList");
 		this.addWhitelistText_input = new js.JQuery("#addWhitelistText");
+		this.blockTimeBase = new haxe.Template(this.blockTime_container.html());
+		this.blockTime_container.html("");
+		this.targetPageBase = new haxe.Template(this.targetPage_container.html());
+		this.targetPage_container.html("");
+		this.todayUnblockTotalBase = new haxe.Template(this.todayUnblockTotal_container.html());
+		this.todayUnblockTotal_container.html("");
 		this.addLaterList_clickable.click($bind(this,this.addLaterList_clickHandler));
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
 		this.addWhiteList_clickable.click($bind(this,this.addWhiteList_clickHandler));

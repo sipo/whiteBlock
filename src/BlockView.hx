@@ -1,4 +1,5 @@
 package ;
+import storage.UnblockState;
 import common.Page;
 import storage.LocalStorageDetail;
 import common.StringUtil;
@@ -6,12 +7,17 @@ import haxe.web.Dispatch;
 import haxe.Template;
 import common.UnblockTimeDownList;
 import js.JQuery;
-private typedef LastPageContext = {
+private typedef BlockTimeContext = {
+	time:String
+}
+private typedef TargetPageContext = {
 	urlFull:String,
 	urlShort:String,
 	title:String
 }
-
+private typedef TodayUnblockTotalContext = {
+	time:String
+}
 class BlockView {
 	
 	/* Block */
@@ -24,15 +30,20 @@ class BlockView {
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
 	 */
 	
-	private var lastPage_container:JQuery;	// ブロック情報表示
+//  <p id="blockTime"><small>::time::経過</small></p>
+	private var blockTime_container:JQuery;	// ブロック情報表示
+	private var blockTimeBase:Template;
 //  <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
-	private var lastPageBase:Template;
+	private var targetPage_container:JQuery;	// ブロック情報表示
+	private var targetPageBase:Template;
 	
 	private var addLaterList_clickable:JQuery;	// あとで見る追加ボタン
 	
 	private var unblock_clickable:JQuery;         // ブロック解除開始リンク
 	private var unblockTime:UnblockTimeDownList;     // ブロック解除する時間
-	private var blockTime_text:JQuery;     // ブロック解除する時間
+//  <p id="todayUnblockTotal"><small>今日は合計::time::解除しています</small></p>
+	private var todayUnblockTotal_container:JQuery;     // ブロック解除する時間
+	private var todayUnblockTotalBase:Template;
 	
 	private var addWhiteList_clickable:JQuery;	// ホワイトリスト追加ボタン
 	private var addWhitelistText_input:JQuery;	// ホワイトリスト追加文字フィールド
@@ -61,19 +72,25 @@ class BlockView {
 		
 		
 		// DOMの初期化
-		lastPage_container = new JQuery("#targetPage");
-		// テンプレート情報を取得し、中身のHTMLを削除
-		lastPageBase = new Template(lastPage_container.html());
-		lastPage_container.html("");
+		blockTime_container = new JQuery("#blockTime");
+		targetPage_container = new JQuery("#targetPage");
 		
 		addLaterList_clickable = new JQuery("#addLaterList");
 		
-		blockTime_text = new JQuery("#blockTime");
-		unblockTime = new UnblockTimeDownList(new JQuery("#unblockTime"));
 		unblock_clickable = new JQuery("#unblock");
+		unblockTime = new UnblockTimeDownList(new JQuery("#unblockTime"));
+		todayUnblockTotal_container = new JQuery("#todayUnblockTotal");
 		
 		addWhiteList_clickable = new JQuery("#addWhiteList");
 		addWhitelistText_input = new JQuery("#addWhitelistText");
+		
+		// テンプレート情報を取得し、中身のHTMLを削除
+		blockTimeBase = new Template(blockTime_container.html());
+		blockTime_container.html("");
+		targetPageBase = new Template(targetPage_container.html());
+		targetPage_container.html("");
+		todayUnblockTotalBase = new Template(todayUnblockTotal_container.html());
+		todayUnblockTotal_container.html("");
 		
 		// イベントの登録
 		addLaterList_clickable.click(addLaterList_clickHandler);
@@ -84,20 +101,26 @@ class BlockView {
 	/**
 	 * 描画
 	 */
-	public function draw(lastBlockPage:Page):Void
+	public function draw(targetPage:Page):Void
 	{
 		Note.log("draw");
+		var date:Date = Date.now();
+		var unblockState:UnblockState = localStorageDetail.getUnblockState();
 		// 基本情報表示
-		var context:LastPageContext = {urlFull:lastBlockPage.url, urlShort:StringUtil.limit(lastBlockPage.url, URL_LIMIT), title:StringUtil.limit(lastBlockPage.title, URL_LIMIT)};
-		lastPage_container.html(lastPageBase.execute(context));
+		var blockTime:Float = date.getTime() - unblockState.switchTime;
+		var blockTimeContext:BlockTimeContext = {time:StringUtil.timeDisplay(blockTime, false)};
+		blockTime_container.html(blockTimeBase.execute(blockTimeContext));
+		var targetPageContext:TargetPageContext = {urlFull:targetPage.url, urlShort:StringUtil.limit(targetPage.url, URL_LIMIT), title:StringUtil.limit(targetPage.title, URL_LIMIT)};
+		targetPage_container.html(targetPageBase.execute(targetPageContext));
 		
 		// ブロック解除
 		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultIndex);
-		
+		var todayUnblockTotalContext:TodayUnblockTotalContext = {time:StringUtil.timeDisplay(unblockState.todayUnblockTotal, false)};
+		todayUnblockTotal_container.html(todayUnblockTotalBase.execute(todayUnblockTotalContext));
 	
 		// ホワイトリスト
 		// 最後にアクセスしたURLを候補に
-		var url:String = lastBlockPage.url;
+		var url:String = targetPage.url;
 		addWhitelistText_input.val(url);
 		// フィールドの長さをURLに合わせる。ただし、大きくなり過ぎないように
 		var fieldSize:Int = url.length;
