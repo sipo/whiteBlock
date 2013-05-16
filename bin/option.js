@@ -236,7 +236,7 @@ LocalStorageDetail.prototype = {
 		this.callbackStorageChange = callbackStorageChange;
 	}
 	,loadAllValue: function() {
-		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -244,7 +244,7 @@ LocalStorageDetail.prototype = {
 		}
 	}
 	,createAllDefault: function() {
-		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -260,8 +260,8 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockUrl":
-			this.lastBlockUrl = null;
+		case "lastBlockPage":
+			this.lastBlockPage = new LaterPage(null,null);
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -319,8 +319,8 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockUrl":
-			this.lastBlockUrl = this.storage.getItem(key);
+		case "lastBlockPage":
+			this.lastBlockPage = haxe.Json.parse(this.storage.getItem(key));
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
@@ -366,8 +366,8 @@ LocalStorageDetail.prototype = {
 		case "version":
 			this.setIntItem(key,1);
 			break;
-		case "lastBlockUrl":
-			this.storage.setItem(key,this.lastBlockUrl);
+		case "lastBlockPage":
+			this.setJsonItem(key,this.lastBlockPage);
 			break;
 		case "unblockTimeList":
 			this.setJsonItem(key,this.unblockTimeList);
@@ -453,11 +453,20 @@ LocalStorageDetail.prototype = {
 	,getUnblockTimeList: function() {
 		return this.unblockTimeList.slice();
 	}
-	,setLastBlockUrl: function(value) {
-		Note.log("set_lastBlockUrl" + value);
-		this.lastBlockUrl = value;
-		this.flushItem("lastBlockUrl");
-		return this.lastBlockUrl;
+	,setLastBlockTitle: function(value) {
+		Note.log("setLastBlockTitle" + value);
+		this.lastBlockTitle = value;
+		this.flushItem("lastBlockPage");
+		return this.lastBlockTitle;
+	}
+	,setLastBlockPage: function(value) {
+		Note.log("setLastBlockPage" + Std.string(value));
+		this.lastBlockPage = value;
+		this.flushItem("lastBlockPage");
+		return this.lastBlockPage;
+	}
+	,getLastBlockPage: function() {
+		return this.lastBlockPage.clone();
 	}
 	,__class__: LocalStorageDetail
 }
@@ -494,7 +503,7 @@ LocalStorageFactory.prototype = {
 var LocalStorageKey = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
-	return ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+	return ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
 var Note = function() {
 };
@@ -509,6 +518,7 @@ Note.prototype = {
 	__class__: Note
 }
 var Option = function() {
+	this.isReady = false;
 	var factory = new LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	this.view = new OptionView(this,this.localStorageDetail);
@@ -520,18 +530,20 @@ Option.main = function() {
 	Option.option = new Option();
 }
 Option.prototype = {
-	unblock_clickHandler: function(unblockTime) {
+	startUnblock: function(unblockTime) {
 		this.localStorageDetail.startUnblock(unblockTime);
 	}
 	,window_timeoutHandler: function() {
+		if(!this.isReady) return;
 		this.view.drawUnblockState(false);
 	}
 	,storage_changeHandler: function(key) {
+		if(!this.isReady) return;
 		Note.log("storage_changeHandler " + key);
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockUrl":
+		case "lastBlockPage":
 			break;
 		case "unblockTimeList":
 			break;
@@ -556,8 +568,9 @@ Option.prototype = {
 		}
 	}
 	,document_readyHandler: function(event) {
-		this.view.initialize(this);
+		this.view.initialize();
 		this.view.drawUnblockState(true);
+		this.isReady = true;
 	}
 	,__class__: Option
 }
@@ -586,7 +599,7 @@ OptionView.prototype = {
 	}
 	,unblock_clickHandler: function(event) {
 		Note.log("unblock_clickHandler");
-		this.option.unblock_clickHandler(this.unblockTime.getValue());
+		this.option.startUnblock(this.unblockTime.getValue());
 	}
 	,drawUnblockTimeDefault: function() {
 	}
@@ -622,7 +635,7 @@ OptionView.prototype = {
 			this.unblockTimeLeft_text.html(commonView.TimeManager.displayText(time,true));
 		}
 	}
-	,initialize: function(option) {
+	,initialize: function() {
 		console.log("optionView initialize");
 		this.blockDisplay_switch = new js.JQuery("#blockDisplay");
 		this.blockTime_text = new js.JQuery("#blockTime");
@@ -1699,7 +1712,7 @@ var q = window.jQuery;
 js.JQuery = q;
 LocalStorageDetail.STORAGE_VERSION = 1;
 LocalStorageKey.VERSION = "version";
-LocalStorageKey.LAST_BLOCK_URL = "lastBlockUrl";
+LocalStorageKey.LAST_BLOCK_PAGE = "lastBlockPage";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
 LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
 LocalStorageKey.UNBLOCK_STATE = "unblockState";

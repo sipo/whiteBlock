@@ -85,7 +85,7 @@ class Background
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
 		Note.log("ブロック " + targetUrl);
-		localStorageDetail.setLastBlockUrl(targetUrl);
+		localStorageDetail.setLastBlockPage(new LaterPage(tab.title, targetUrl));
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	/*

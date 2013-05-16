@@ -53,7 +53,7 @@ Background.prototype = {
 		}
 		if(this.localStorageDetail.checkUnblock()) return;
 		Note.log("ブロック " + targetUrl);
-		this.localStorageDetail.setLastBlockUrl(targetUrl);
+		this.localStorageDetail.setLastBlockPage(new LaterPage(tab.title,targetUrl));
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 	,storage_changeHandler: function(key) {
@@ -238,7 +238,7 @@ LocalStorageDetail.prototype = {
 		this.callbackStorageChange = callbackStorageChange;
 	}
 	,loadAllValue: function() {
-		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -246,7 +246,7 @@ LocalStorageDetail.prototype = {
 		}
 	}
 	,createAllDefault: function() {
-		var _g = 0, _g1 = ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		var _g = 0, _g1 = ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 		while(_g < _g1.length) {
 			var key = _g1[_g];
 			++_g;
@@ -262,8 +262,8 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockUrl":
-			this.lastBlockUrl = null;
+		case "lastBlockPage":
+			this.lastBlockPage = new LaterPage(null,null);
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -321,8 +321,8 @@ LocalStorageDetail.prototype = {
 		switch(key) {
 		case "version":
 			break;
-		case "lastBlockUrl":
-			this.lastBlockUrl = this.storage.getItem(key);
+		case "lastBlockPage":
+			this.lastBlockPage = haxe.Json.parse(this.storage.getItem(key));
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
@@ -368,8 +368,8 @@ LocalStorageDetail.prototype = {
 		case "version":
 			this.setIntItem(key,1);
 			break;
-		case "lastBlockUrl":
-			this.storage.setItem(key,this.lastBlockUrl);
+		case "lastBlockPage":
+			this.setJsonItem(key,this.lastBlockPage);
 			break;
 		case "unblockTimeList":
 			this.setJsonItem(key,this.unblockTimeList);
@@ -455,11 +455,20 @@ LocalStorageDetail.prototype = {
 	,getUnblockTimeList: function() {
 		return this.unblockTimeList.slice();
 	}
-	,setLastBlockUrl: function(value) {
-		Note.log("set_lastBlockUrl" + value);
-		this.lastBlockUrl = value;
-		this.flushItem("lastBlockUrl");
-		return this.lastBlockUrl;
+	,setLastBlockTitle: function(value) {
+		Note.log("setLastBlockTitle" + value);
+		this.lastBlockTitle = value;
+		this.flushItem("lastBlockPage");
+		return this.lastBlockTitle;
+	}
+	,setLastBlockPage: function(value) {
+		Note.log("setLastBlockPage" + Std.string(value));
+		this.lastBlockPage = value;
+		this.flushItem("lastBlockPage");
+		return this.lastBlockPage;
+	}
+	,getLastBlockPage: function() {
+		return this.lastBlockPage.clone();
 	}
 	,__class__: LocalStorageDetail
 }
@@ -496,7 +505,7 @@ LocalStorageFactory.prototype = {
 var LocalStorageKey = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
-	return ["version","lastBlockUrl","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+	return ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
 var Note = function() {
 };
@@ -1140,7 +1149,7 @@ js.JQuery = q;
 Background.DEBUG_CLEAR_DATA = true;
 LocalStorageDetail.STORAGE_VERSION = 1;
 LocalStorageKey.VERSION = "version";
-LocalStorageKey.LAST_BLOCK_URL = "lastBlockUrl";
+LocalStorageKey.LAST_BLOCK_PAGE = "lastBlockPage";
 LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
 LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
 LocalStorageKey.UNBLOCK_STATE = "unblockState";

@@ -18,7 +18,7 @@ class OptionView {
 	
 	
 	/* --------------------------------
-	 * DOMパーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
+	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
 	 */
 	
 	private var blockDisplay_switch:JQuery;    // ブロック時に表示するエリア
@@ -63,7 +63,7 @@ class OptionView {
 	/**
 	 * 初期化指示
 	 */
-	public function initialize(option:Option)
+	public function initialize()
 	{
 		trace("optionView initialize");
 		// 必要変数
@@ -181,7 +181,7 @@ class OptionView {
 	private function unblock_clickHandler(event:JqEvent):Void
 	{
 		Note.log("unblock_clickHandler");
-		option.unblock_clickHandler(unblockTime.getValue());
+		option.startUnblock(unblockTime.getValue());
 	}
 	
 	/*

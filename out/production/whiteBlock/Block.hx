@@ -1,4 +1,5 @@
 package ;
+import LocalStorageDetail.Page;
 import js.html.Location;
 import js.JQuery;
 import js.html.DOMWindow;
@@ -15,20 +16,11 @@ class Block
 	/* dom準備完了 */
 	private var isReady:Bool = false;
 	/* 最後にブロックされたURL（おそらくこのページのもとのURLであることを期待するが、完全ではない気がする） */
-	private var lastBlockUrl:String;
+	private var lastBlockPage:Page;
+	/* view */
+	private var view:BlockView;
 	
-	/* --------------------------------
-	 * DOMパーツ
-	 */
 	
-	private var addWhiteList:JQuery;
-	private var addWhitelistText:JQuery;
-	
-	/* --------------------------------
-	 * DOMパラメータ
-	 */
-	
-	private static inline var ADD_WHITELIST_TEXT_MAX_SIZE:Int = 100;
 	
 	/* ================================================================
 	 * 基本処理
@@ -50,7 +42,9 @@ class Block
 		var factory:LocalStorageFactory = new LocalStorageFactory();
 		localStorageDetail = factory.create(storage_changeHandler, false);
 		// 初期データの取得
-		lastBlockUrl = localStorageDetail.lastBlockUrl;
+		lastBlockPage = localStorageDetail.getLastBlockPage();
+		// viewの用意
+		view = new BlockView(this);
 		// 準備完了タイミングで初期描画
 		new JQuery("document").ready(document_readyHandler);
 	}
@@ -61,13 +55,9 @@ class Block
 	private function document_readyHandler(event:JqEvent):Void
 	{
 		isReady = true;
-		// パーツ取得
-		addWhiteList = new JQuery("#addWhiteList");
-		addWhitelistText = new JQuery("#addWhitelistText");
 		// 描画呼び出し
-		drawAddWhitelistText();
-		// イベント登録
-		addWhiteList.click(addWhiteList_clickHandler);
+		view.initialize();
+		view.draw(lastBlockPage);
 	}
 	
 	/*
@@ -76,38 +66,28 @@ class Block
 	private function storage_changeHandler(key:String):Void
 	{
 		if (!isReady) return;
-		trace("storage_change" + key);
+		Note.log("storage_change" + key);
 	}
 	
 	/* ================================================================
-	 * 描画処理
+	 * Viewからの挙動（必要ならController化する
 	 */
 	
-	/*
-	 * ブロックしたURLを描画
+	/**
+	 * ブロック解除開始
 	 */
-	private function drawAddWhitelistText():Void
+	public function startUnblock(unblockTime:Float):Void
 	{
-		trace("drawLastBlockUrl");
-		// 最後にアクセスしたURLを候補に
-		addWhitelistText.val(lastBlockUrl);
-		// フィールドの長さをURLに合わせる。ただし、大きくなり過ぎないように
-		var fieldSize:Int = lastBlockUrl.length;
-		if (ADD_WHITELIST_TEXT_MAX_SIZE < fieldSize) fieldSize = ADD_WHITELIST_TEXT_MAX_SIZE;
-		addWhitelistText.attr("size", cast(fieldSize));
+		localStorageDetail.startUnblock(unblockTime);
 	}
-	
-	/* ================================================================
-	 * UI処理
-	 */
 	
 	/*
 	 * ホワイトリストに追加し、画面遷移
 	 */
-	private function addWhiteList_clickHandler(event:JqEvent):Void
+	public function addWhiteList(url:String):Void
 	{
-		localStorageDetail.addWhitelist(addWhitelistText.val());
-		Browser.window.location.assign(lastBlockUrl);
+		localStorageDetail.addWhitelist(url);
+		Browser.window.location.assign(lastBlockPage.url);
 	}
 }
 

@@ -23,13 +23,27 @@ class LocalStorageDetail {
 	 */
 	
 	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
-	public var lastBlockUrl(default, null):String;
-	public function setLastBlockUrl(value:String):String
+	private var lastBlockPage:LaterPage;
+	public function getLastBlockPage():LaterPage
 	{
-		Note.log("set_lastBlockUrl" + value);
-		lastBlockUrl = value;
-		flushItem(LocalStorageKey.LAST_BLOCK_URL);	// Storageへ反映
-		return lastBlockUrl;
+		return lastBlockPage.clone();
+	}
+	public function setLastBlockPage(value:LaterPage):LaterPage
+	{
+		Note.log("setLastBlockPage" + value);
+		lastBlockPage = value;
+		flushItem(LocalStorageKey.LAST_BLOCK_PAGE);	// Storageへ反映
+		return lastBlockPage;
+	}
+	
+	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
+	public var lastBlockTitle(default, null):String;
+	public function setLastBlockTitle(value:String):String
+	{
+		Note.log("setLastBlockTitle" + value);
+		lastBlockTitle = value;
+		flushItem(LocalStorageKey.LAST_BLOCK_PAGE);	// Storageへ反映
+		return lastBlockTitle;
 	}
 	
 	/** ブロック解除の選択時間リスト */
@@ -136,8 +150,8 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				setIntItem(key, STORAGE_VERSION);
-			case LocalStorageKey.LAST_BLOCK_URL:
-				storage.setItem(key, lastBlockUrl);
+			case LocalStorageKey.LAST_BLOCK_PAGE:
+				setJsonItem(key, lastBlockPage);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				setJsonItem(key, unblockTimeList);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
@@ -183,8 +197,8 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_URL:
-				lastBlockUrl = storage.getItem(key);
+			case LocalStorageKey.LAST_BLOCK_PAGE:
+				lastBlockPage = Json.parse(storage.getItem(key));
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
@@ -228,8 +242,8 @@ class LocalStorageDetail {
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_URL:
-				lastBlockUrl = null;
+			case LocalStorageKey.LAST_BLOCK_PAGE:
+				lastBlockPage = new LaterPage(null, null);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
 					5 * 1000,
@@ -441,4 +455,9 @@ class LocalStorageDetail {
 typedef TotalTimeKit = {
 	today:Float,
 	yesterday:Float
+}
+
+typedef Page = {
+	title:String,
+	url:String
 }

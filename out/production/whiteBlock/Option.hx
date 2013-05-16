@@ -11,6 +11,8 @@ class Option {
 	/* view */
 	private var view:OptionView;
 	
+	private var isReady:Bool = false;
+	
 	/* ================================================================
 	 * 処理
 	 */
@@ -45,8 +47,9 @@ class Option {
 	 */
 	private function document_readyHandler(event:JqEvent):Void
 	{
-		view.initialize(this);
+		view.initialize();
 		view.drawUnblockState(true);
+		isReady = true;
 	}
 	
 	/*
@@ -54,11 +57,12 @@ class Option {
 	 */
 	private function storage_changeHandler(key:String):Void
 	{
+		if (!isReady) return;
 		Note.log("storage_changeHandler " + key);
 		switch(key){
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
-			case LocalStorageKey.LAST_BLOCK_URL:
+			case LocalStorageKey.LAST_BLOCK_PAGE:
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 			case LocalStorageKey.UNBLOCK_STATE:
@@ -79,6 +83,7 @@ class Option {
 	 */
 	private function window_timeoutHandler():Void
 	{
+		if (!isReady) return;
 		view.drawUnblockState(false);
 	}
 	
@@ -89,7 +94,7 @@ class Option {
 	/**
 	 * ブロック解除開始
 	 */
-	public function unblock_clickHandler(unblockTime:Float):Void
+	public function startUnblock(unblockTime:Float):Void
 	{
 		localStorageDetail.startUnblock(unblockTime);
 	}
