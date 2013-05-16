@@ -417,6 +417,13 @@ common.StringUtil.timeDisplay = function(time,useSeconds) {
 	if(minutes == 0) return hours + "時間";
 	return hours + "時間" + minutes + "分";
 }
+common.StringUtil.timeDisplayMinutes = function(time) {
+	var seconds = (time / 1000 | 0) % 60;
+	var minutes = (time / 1000 / 60 | 0) % 60;
+	var hours = time / 1000 / 60 / 60 | 0;
+	var secondsZero = seconds < 10?"0":"";
+	return minutes + ":" + secondsZero + seconds;
+}
 common.StringUtil.limit = function(original,max) {
 	if(original.length <= max) return original;
 	return HxOverrides.substr(original,0,max - 3) + "...";

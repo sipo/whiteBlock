@@ -1,4 +1,7 @@
 package ;
+import common.StringUtil;
+import storage.UnblockState;
+import chrome.BrowserAction;
 import common.RequestParams;
 import storage.LocalStorageFactory;
 import storage.LocalStorageDetail;
@@ -87,7 +90,14 @@ class Background
 			if (!checkList(targetUrl, localStorageDetail.getBlacklist(), localStorageDetail.blacklistUseRegexp)) return;
 		}
 		// ブロック解除中ならブロックしない
-		if (localStorageDetail.checkUnblock()) return;
+		if (localStorageDetail.checkUnblock()){
+			var date:Date = Date.now();
+			var unblockState:UnblockState = localStorageDetail.getUnblockState();
+			var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
+			BrowserAction.setBadgeText({text:StringUtil.timeDisplayMinutes(time)});
+			return;
+		}
+		BrowserAction.setBadgeText({text:""});
 		// ページをブロックする（ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用）
 		
 		// ブロックページの準備

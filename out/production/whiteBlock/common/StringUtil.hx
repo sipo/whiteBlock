@@ -22,6 +22,19 @@ class StringUtil {
 		return hours + "時間" + minutes + "分";
 	}
 	
+	
+	/*
+	 * 時間の時計表示
+	 */
+	public static function timeDisplayMinutes(time:Float):String
+	{
+		var seconds:Int = Std.int(time / 1000) % 60;
+		var minutes:Int = Std.int(time / 1000 / 60) % 60;
+		var hours:Int = Std.int(time / 1000 / 60 / 60);
+		var secondsZero:String = if (seconds < 10) "0" else "";
+		return minutes + ":" + secondsZero + seconds;
+	}
+	
 	/** ドットの数 */
 	public static inline var DOT_NUM:Int = 3;
 	public static inline var DOTS:String = "...";

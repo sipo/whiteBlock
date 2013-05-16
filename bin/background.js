@@ -53,7 +53,14 @@ Background.prototype = {
 		if(this.checkList(targetUrl,this.localStorageDetail.getWhitelist(),this.localStorageDetail.whitelistUseRegexp)) {
 			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
-		if(this.localStorageDetail.checkUnblock()) return;
+		if(this.localStorageDetail.checkUnblock()) {
+			var date = new Date();
+			var unblockState = this.localStorageDetail.getUnblockState();
+			var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
+			chrome.browserAction.setBadgeText({ text : common.StringUtil.timeDisplayMinutes(time)});
+			return;
+		}
+		chrome.browserAction.setBadgeText({ text : ""});
 		var params = new haxe.ds.StringMap();
 		params.set("title",tab.title);
 		params.set("url",targetUrl);
@@ -338,6 +345,30 @@ common.Page.prototype = {
 }
 common.RequestParams = $hxClasses["common.RequestParams"] = function() { }
 common.RequestParams.__name__ = true;
+common.StringUtil = $hxClasses["common.StringUtil"] = function() { }
+common.StringUtil.__name__ = true;
+common.StringUtil.timeDisplay = function(time,useSeconds) {
+	var seconds = (time / 1000 | 0) % 60;
+	var minutes = (time / 1000 / 60 | 0) % 60;
+	var hours = time / 1000 / 60 / 60 | 0;
+	if(hours == 0) {
+		if(useSeconds) return minutes + "分" + seconds + "秒";
+		return minutes + "分";
+	}
+	if(minutes == 0) return hours + "時間";
+	return hours + "時間" + minutes + "分";
+}
+common.StringUtil.timeDisplayMinutes = function(time) {
+	var seconds = (time / 1000 | 0) % 60;
+	var minutes = (time / 1000 / 60 | 0) % 60;
+	var hours = time / 1000 / 60 / 60 | 0;
+	var secondsZero = seconds < 10?"0":"";
+	return minutes + ":" + secondsZero + seconds;
+}
+common.StringUtil.limit = function(original,max) {
+	if(original.length <= max) return original;
+	return HxOverrides.substr(original,0,max - 3) + "...";
+}
 var haxe = haxe || {}
 haxe.Json = $hxClasses["haxe.Json"] = function() {
 };
@@ -1214,6 +1245,8 @@ js.JQuery = q;
 Background.DEBUG_CLEAR_DATA = true;
 common.RequestParams.TITLE = "title";
 common.RequestParams.URL = "url";
+common.StringUtil.DOT_NUM = 3;
+common.StringUtil.DOTS = "...";
 js.Browser.window = typeof window != "undefined" ? window : null;
 storage.LocalStorageDetail.STORAGE_VERSION = 1;
 storage.LocalStorageKey.VERSION = "version";

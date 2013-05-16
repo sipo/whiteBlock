@@ -4,7 +4,24 @@
         <meta charset="utf-8" />
         <script type="text/javascript" src="./jquery.js"></script>
         <script type="text/javascript" src="./option.js"></script>
-  </head>
-  <body>
-  </body>
+        <link href="popup.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <section id="blockState">
+            <div id="blockDisplay">
+                <p>現在ブロック中です</p>
+                <p><small><span id="blockTime">00時間00分</span>経過</small></p>
+                <p>
+                    <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
+                    <a href="#" id="unblock">少しだけブロックを解除する</a>
+                </p>
+            </div>
+            <div id="unblockDisplay">
+                <p>現在ブロックが解除されています</p>
+                <p><small>あと<span id="unblockTimeLeft">00分00秒</span></small></p>
+                <a href="#" id="endUnblock">ブロック解除を終了する</a>
+            </div>
+        </section>
+        <p><a href="option.html" target="_blank">オプションを開く</a></p>
+    </body>
 </html>
