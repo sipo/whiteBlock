@@ -1,5 +1,5 @@
 package ;
-class LaterPage {
+class Page {
 	
 	/** タイトル */
 	public var title:String;
@@ -12,15 +12,15 @@ class LaterPage {
 		this.url = url;
 	}
 	
-	public function clone():LaterPage
+	public function clone():Page
 	{
-		return new LaterPage(title, url);
+		return new Page(title, url);
 	}
 	
 	/**
 	 * クローンを配列で返す
 	 */
-	public static function arrayClone(list:Array<LaterPage>):Array<LaterPage>
+	public static function arrayClone(list:Array<Page>):Array<Page>
 	{
 		return [for (i in 0...list.length) list[i].clone()];
 	}
@@ -28,11 +28,11 @@ class LaterPage {
 	/**
 	 * Jsonから配列を作る
 	 */
-	public static function createArrayFromJson(jsonData:Dynamic):Array<LaterPage>
+	public static function createArrayFromJson(jsonData:Dynamic):Array<Page>
 	{
-		var ans:Array<LaterPage> = [];
+		var ans:Array<Page> = [];
 		for (i in 0...jsonData.length) {
-			ans.push(new LaterPage(jsonData[i].title, jsonData[i].url));
+			ans.push(new Page(jsonData[i].title, jsonData[i].url));
 		}
 		return ans;
 	}
