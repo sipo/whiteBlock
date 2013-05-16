@@ -1,4 +1,5 @@
-package ;
+package storage;
+import common.Page;
 import js.html.StorageEvent;
 import js.html.Event;
 import js.html.DOMWindow;
@@ -234,6 +235,7 @@ class LocalStorageDetail {
 				unblockState = UnblockState.createDefault();
 			case LocalStorageKey.WHITELIST:
 				whitelist = [
+					"https://www.google.co.jp/webhp",
 					"https://www.google.co.jp/search",
 					"https://www.google.co.jp/calendar",
 					"https://www.google.co.jp/map",

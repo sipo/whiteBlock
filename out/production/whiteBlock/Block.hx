@@ -1,4 +1,8 @@
 package ;
+import common.RequestParams;
+import common.Page;
+import storage.LocalStorageFactory;
+import storage.LocalStorageDetail;
 import haxe.ds.StringMap;
 import haxe.web.Request;
 import js.html.Location;
@@ -45,7 +49,7 @@ class Block
 		// 初期データの取得
 //		lastBlockPage = localStorageDetail.getLastBlockPage();
 		var params:StringMap<String> = Request.getParams();
-		lastBlockPage = new Page(StringTools.urlDecode(params.get("title")), StringTools.urlDecode(params.get("url")));	// TODO:定数化
+		lastBlockPage = new Page(StringTools.urlDecode(params.get(RequestParams.TITLE)), StringTools.urlDecode(params.get(RequestParams.URL)));
 		// viewの用意
 		view = new BlockView(this, localStorageDetail);
 		// 準備完了タイミングで初期描画

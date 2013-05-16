@@ -1,4 +1,4 @@
-package ;
+package storage;
 class LocalStorageKey {
 	public static inline var VERSION:String = "version";
 	public static inline var UNBLOCK_TIME_LIST:String = "unblockTimeList";

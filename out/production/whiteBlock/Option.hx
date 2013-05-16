@@ -1,4 +1,7 @@
 package ;
+import storage.LocalStorageKey;
+import storage.LocalStorageFactory;
+import storage.LocalStorageDetail;
 import js.Browser;
 import js.JQuery;
 class Option {

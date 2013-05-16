@@ -1,4 +1,7 @@
 package ;
+import common.RequestParams;
+import storage.LocalStorageFactory;
+import storage.LocalStorageDetail;
 import StringTools;
 import Std;
 import haxe.ds.StringMap;
@@ -89,8 +92,8 @@ class Background
 		
 		// ブロックページの準備
 		var params:StringMap<String> = new StringMap<String>();
-		params.set("title", tab.title);
-		params.set("url", targetUrl);
+		params.set(RequestParams.TITLE, tab.title);
+		params.set(RequestParams.URL, targetUrl);
 		var paramsStrings:Array<String> = [];
 		for(key in params.keys()){
 			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));

@@ -1,4 +1,4 @@
-package ;
+package common;
 class Page {
 	
 	/** タイトル */

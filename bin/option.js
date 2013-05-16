@@ -107,346 +107,6 @@ List.prototype = {
 	}
 	,__class__: List
 }
-var LocalStorageDetail = function(storage,window) {
-	Note.log("LocalStorageDetail constractor");
-	this.storage = storage;
-	window.addEventListener("storage",$bind(this,this.window_storageHandler));
-};
-LocalStorageDetail.__name__ = true;
-LocalStorageDetail.prototype = {
-	calcTotalTime: function(date) {
-		var ans = { yesterday : 0, today : 0};
-		var lastDate = (function($this) {
-			var $r;
-			var d = new Date();
-			d.setTime($this.unblockState.switchTime);
-			$r = d;
-			return $r;
-		}(this));
-		var isSameDay = lastDate.getDay() == date.getDay();
-		if(this.unblockState.isUnblock) {
-			if(isSameDay) {
-				var nowUnblockTimeTotal = date.getTime() - this.unblockState.switchTime;
-				ans.today = this.unblockState.todayUnblockTotal + nowUnblockTimeTotal;
-				ans.yesterday = this.unblockState.yesterdayUnblockTotal;
-			} else {
-				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDay(),0,0,0).getTime();
-				ans.yesterday = this.unblockState.todayUnblockTotal + today0HourTime - this.unblockState.switchTime;
-				ans.today = date.getTime() - today0HourTime;
-			}
-		} else if(isSameDay) {
-			ans.yesterday = this.unblockState.yesterdayUnblockTotal;
-			ans.today = this.unblockState.todayUnblockTotal;
-		} else {
-			ans.yesterday = this.unblockState.todayUnblockTotal;
-			ans.today = 0;
-		}
-		return ans;
-	}
-	,checkUnblock: function() {
-		console.log("checkUnblock");
-		if(!this.unblockState.isUnblock) return false;
-		var date = new Date();
-		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;
-		console.log([date.getTime(),endTime]);
-		if(date.getTime() < endTime) return true;
-		var endDate = (function($this) {
-			var $r;
-			var d = new Date();
-			d.setTime(endTime);
-			$r = d;
-			return $r;
-		}(this));
-		var totalTimeKit = this.calcTotalTime(endDate);
-		this.unblockState = new UnblockState();
-		this.unblockState.isUnblock = false;
-		this.unblockState.switchTime = endTime;
-		this.unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
-		this.unblockState.todayUnblockTotal = totalTimeKit.today;
-		this.unblockState.unblockTime = -1;
-		this.flushItem("unblockState");
-		return false;
-	}
-	,startUnblock: function(unblockTime) {
-		var date = new Date();
-		var nextUnblockState = new UnblockState();
-		nextUnblockState.isUnblock = true;
-		if(this.unblockState.isUnblock) {
-			var passing = this.unblockState.switchTime - date.getTime();
-			nextUnblockState.unblockTime = passing + unblockTime;
-			nextUnblockState.switchTime = this.unblockState.switchTime;
-			nextUnblockState.yesterdayUnblockTotal = this.unblockState.yesterdayUnblockTotal;
-			nextUnblockState.todayUnblockTotal = this.unblockState.todayUnblockTotal;
-		} else {
-			var totalTimeKit = this.calcTotalTime(date);
-			nextUnblockState.switchTime = date.getTime();
-			nextUnblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
-			nextUnblockState.todayUnblockTotal = totalTimeKit.today;
-			nextUnblockState.unblockTime = unblockTime;
-		}
-		this.unblockState = nextUnblockState;
-		this.flushItem("unblockState");
-	}
-	,window_storageHandler_: function(key) {
-		this.loadData(key);
-		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
-	}
-	,window_storageHandler: function(event) {
-		Note.log("window_storage " + Std.string(event));
-		var storageEvent = event;
-		this.window_storageHandler_(storageEvent.key);
-	}
-	,setCallback: function(callbackStorageChange) {
-		this.callbackStorageChange = callbackStorageChange;
-	}
-	,loadAllValue: function() {
-		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
-		while(_g < _g1.length) {
-			var key = _g1[_g];
-			++_g;
-			this.loadData(key);
-		}
-	}
-	,createAllDefault: function() {
-		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
-		while(_g < _g1.length) {
-			var key = _g1[_g];
-			++_g;
-			this.createDefault(key);
-		}
-	}
-	,getVersion: function() {
-		var versionText = this.storage.getItem("version");
-		if(versionText == null) return -1;
-		return Std.parseInt(versionText);
-	}
-	,createDefault: function(key) {
-		switch(key) {
-		case "version":
-			break;
-		case "unblockTimeList":
-			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
-			break;
-		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultIndex = 2;
-			break;
-		case "unblockState":
-			this.unblockState = UnblockState.createDefault();
-			break;
-		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/search","https://www.google.co.jp/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
-			break;
-		case "whitelistUseRegexp":
-			this.whitelistUseRegexp = false;
-			break;
-		case "blacklist":
-			this.blacklist = [];
-			break;
-		case "blacklistUseRegexp":
-			this.blacklistUseRegexp = false;
-			break;
-		case "laterList":
-			this.laterList = [];
-			break;
-		default:
-			throw "対応していない値です key=" + key;
-		}
-		this.flushItem(key);
-	}
-	,getObject: function(key) {
-		return haxe.Json.parse(this.storage.getItem(key));
-	}
-	,getArrayBool: function(key) {
-		return this.storage.getItem(key) == "true";
-	}
-	,getArrayString: function(key) {
-		return haxe.Json.parse(this.storage.getItem(key));
-	}
-	,getArrayFloat: function(key) {
-		var list = haxe.Json.parse(this.storage.getItem(key));
-		return (function($this) {
-			var $r;
-			var _g = [];
-			{
-				var _g2 = 0, _g1 = list.length;
-				while(_g2 < _g1) {
-					var i = _g2++;
-					_g.push(Std.parseFloat(list[i]));
-				}
-			}
-			$r = _g;
-			return $r;
-		}(this));
-	}
-	,loadData: function(key) {
-		Note.log("loadData " + key);
-		switch(key) {
-		case "version":
-			break;
-		case "unblockTimeList":
-			this.unblockTimeList = this.getArrayFloat(key);
-			break;
-		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultIndex = Std.parseInt(this.storage.getItem(key));
-			break;
-		case "unblockState":
-			this.unblockState = UnblockState.createFromJson(this.storage.getItem(key));
-			break;
-		case "whitelist":
-			this.whitelist = this.getArrayString(key);
-			break;
-		case "whitelistUseRegexp":
-			this.whitelistUseRegexp = this.getArrayBool(key);
-			break;
-		case "blacklist":
-			this.blacklist = this.getArrayString(key);
-			break;
-		case "blacklistUseRegexp":
-			this.blacklistUseRegexp = this.getArrayBool(key);
-			break;
-		case "laterList":
-			this.laterList = Page.createArrayFromJson(this.getObject(key));
-			break;
-		default:
-			throw "対応していない値です key=" + key;
-		}
-	}
-	,setIntItem: function(key,value) {
-		this.storage.setItem(key,Std.string(this.unblockTimeDefaultIndex));
-	}
-	,setBoolItem: function(key,value) {
-		this.storage.setItem(key,value?"true":"false");
-	}
-	,setJsonItem: function(key,value) {
-		this.storage.setItem(key,haxe.Json.stringify(value));
-	}
-	,flushItem: function(key) {
-		Note.log("flushItem " + key);
-		switch(key) {
-		case "version":
-			this.setIntItem(key,1);
-			break;
-		case "unblockTimeList":
-			this.setJsonItem(key,this.unblockTimeList);
-			break;
-		case "unblockTimeDefaultIndex":
-			this.setIntItem(key,this.unblockTimeDefaultIndex);
-			break;
-		case "unblockState":
-			this.setJsonItem(key,this.unblockState);
-			break;
-		case "whitelist":
-			this.setJsonItem(key,this.whitelist);
-			break;
-		case "whitelistUseRegexp":
-			this.setBoolItem(key,this.whitelistUseRegexp);
-			break;
-		case "blacklist":
-			this.setJsonItem(key,this.blacklist);
-			break;
-		case "blacklistUseRegexp":
-			this.setBoolItem(key,this.blacklistUseRegexp);
-			break;
-		case "laterList":
-			this.setJsonItem(key,this.laterList);
-			break;
-		default:
-			throw "対応していない値です key=" + key;
-		}
-		this.window_storageHandler_(key);
-	}
-	,removeLaterList: function(value) {
-		HxOverrides.remove(this.laterList,value);
-		this.flushItem("laterList");
-	}
-	,addLaterList: function(value) {
-		this.laterList.push(value);
-		this.flushItem("laterList");
-	}
-	,getLaterList: function() {
-		return Page.arrayClone(this.laterList);
-	}
-	,setBlacklistUseRegexp: function(value) {
-		this.blacklistUseRegexp = value;
-		this.flushItem("blacklistUseRegexp");
-		return this.blacklistUseRegexp;
-	}
-	,setBlacklist: function(value) {
-		this.blacklist = value;
-		this.flushItem("blacklist");
-	}
-	,getBlacklist: function() {
-		return this.blacklist.slice();
-	}
-	,setWhitelistUseRegexp: function(value) {
-		this.whitelistUseRegexp = value;
-		this.flushItem("whitelistUseRegexp");
-		return this.whitelistUseRegexp;
-	}
-	,addWhitelist: function(value) {
-		Note.log("addWhitelist" + Std.string(this.whitelist));
-		this.whitelist.push(value);
-		this.flushItem("whitelist");
-	}
-	,setWhitelist: function(value) {
-		this.whitelist = value;
-		this.flushItem("whitelist");
-	}
-	,getWhitelist: function() {
-		return this.whitelist.slice();
-	}
-	,getUnblockState: function() {
-		return this.unblockState.clone();
-	}
-	,setUnblockTimeDefaultIndex: function(value) {
-		this.unblockTimeDefaultIndex = value;
-		this.flushItem("unblockTimeDefaultIndex");
-		return this.unblockTimeDefaultIndex;
-	}
-	,setUnblockTimeList: function(value) {
-		this.unblockTimeList = value;
-		this.flushItem("unblockTimeList");
-	}
-	,getUnblockTimeList: function() {
-		return this.unblockTimeList.slice();
-	}
-	,__class__: LocalStorageDetail
-}
-var LocalStorageFactory = function() {
-};
-LocalStorageFactory.__name__ = true;
-LocalStorageFactory.prototype = {
-	create: function(callbackStorageChange,forceClear) {
-		var storageDetail = new LocalStorageDetail(js.Browser.getLocalStorage(),js.Browser.window);
-		var isFirstChange = false;
-		var version = storageDetail.getVersion();
-		if(version == -1 || forceClear) {
-			storageDetail.createAllDefault();
-			Note.log("ストレージデータを生成しました");
-			version = storageDetail.getVersion();
-			isFirstChange = true;
-		}
-		if(version < 1) {
-			version = storageDetail.getVersion();
-			isFirstChange = true;
-		}
-		if(1 < version) {
-			storageDetail.createAllDefault();
-			version = storageDetail.getVersion();
-			isFirstChange = true;
-			throw "保存されているデータに対して、古いバージョンのエクステンションが使用されました。";
-		}
-		storageDetail.loadAllValue();
-		storageDetail.setCallback(callbackStorageChange);
-		return storageDetail;
-	}
-	,__class__: LocalStorageFactory
-}
-var LocalStorageKey = function() { }
-LocalStorageKey.__name__ = true;
-LocalStorageKey.KEY_LIST = function() {
-	return ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
-}
 var Note = function() {
 };
 Note.__name__ = true;
@@ -461,7 +121,7 @@ Note.prototype = {
 }
 var Option = function() {
 	this.isReady = false;
-	var factory = new LocalStorageFactory();
+	var factory = new storage.LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	this.view = new OptionView(this,this.localStorageDetail);
 	new js.JQuery("document").ready($bind(this,this.document_readyHandler));
@@ -600,44 +260,6 @@ OptionView.prototype = {
 	}
 	,__class__: OptionView
 }
-var Page = function(title,url) {
-	this.title = title;
-	this.url = url;
-};
-Page.__name__ = true;
-Page.arrayClone = function(list) {
-	return (function($this) {
-		var $r;
-		var _g = [];
-		{
-			var _g2 = 0, _g1 = list.length;
-			while(_g2 < _g1) {
-				var i = _g2++;
-				_g.push(list[i].clone());
-			}
-		}
-		$r = _g;
-		return $r;
-	}(this));
-}
-Page.createFromJson = function(jsonData) {
-	return new Page(jsonData.title,jsonData.url);
-}
-Page.createArrayFromJson = function(jsonData) {
-	var ans = [];
-	var _g1 = 0, _g = jsonData.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		ans.push(new Page(jsonData[i].title,jsonData[i].url));
-	}
-	return ans;
-}
-Page.prototype = {
-	clone: function() {
-		return new Page(this.title,this.url);
-	}
-	,__class__: Page
-}
 var Reflect = function() { }
 Reflect.__name__ = true;
 Reflect.hasField = function(o,field) {
@@ -743,40 +365,45 @@ Type["typeof"] = function(v) {
 Type.enumIndex = function(e) {
 	return e[1];
 }
-var UnblockState = function() {
-	this.isUnblock = false;
-	this.todayUnblockTotal = 0;
-	this.yesterdayUnblockTotal = 0;
-	this.switchTime = new Date().getTime();
-	this.unblockTime = 0;
+var common = common || {}
+common.Page = function(title,url) {
+	this.title = title;
+	this.url = url;
 };
-UnblockState.__name__ = true;
-UnblockState.createDefault = function() {
-	return new UnblockState();
+common.Page.__name__ = true;
+common.Page.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
 }
-UnblockState.createFromJson = function(jsonText) {
-	var jsonData = haxe.Json.parse(jsonText);
-	var ans = new UnblockState();
-	ans.isUnblock = jsonData.isUnblock;
-	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
-	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
-	ans.switchTime = Std.parseFloat(jsonData.switchTime);
-	ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
+common.Page.createFromJson = function(jsonData) {
+	return new common.Page(jsonData.title,jsonData.url);
+}
+common.Page.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new common.Page(jsonData[i].title,jsonData[i].url));
+	}
 	return ans;
 }
-UnblockState.prototype = {
+common.Page.prototype = {
 	clone: function() {
-		var ans = new UnblockState();
-		ans.isUnblock = this.isUnblock;
-		ans.todayUnblockTotal = this.todayUnblockTotal;
-		ans.yesterdayUnblockTotal = this.yesterdayUnblockTotal;
-		ans.switchTime = this.switchTime;
-		ans.unblockTime = this.unblockTime;
-		return ans;
+		return new common.Page(this.title,this.url);
 	}
-	,__class__: UnblockState
+	,__class__: common.Page
 }
-var common = common || {}
 common.StringUtil = function() { }
 common.StringUtil.__name__ = true;
 common.StringUtil.timeDisplay = function(time,useSeconds) {
@@ -1655,6 +1282,380 @@ js.Browser.getLocalStorage = function() {
 		return null;
 	}
 }
+var storage = storage || {}
+storage.LocalStorageDetail = function(storage,window) {
+	Note.log("LocalStorageDetail constractor");
+	this.storage = storage;
+	window.addEventListener("storage",$bind(this,this.window_storageHandler));
+};
+storage.LocalStorageDetail.__name__ = true;
+storage.LocalStorageDetail.prototype = {
+	calcTotalTime: function(date) {
+		var ans = { yesterday : 0, today : 0};
+		var lastDate = (function($this) {
+			var $r;
+			var d = new Date();
+			d.setTime($this.unblockState.switchTime);
+			$r = d;
+			return $r;
+		}(this));
+		var isSameDay = lastDate.getDay() == date.getDay();
+		if(this.unblockState.isUnblock) {
+			if(isSameDay) {
+				var nowUnblockTimeTotal = date.getTime() - this.unblockState.switchTime;
+				ans.today = this.unblockState.todayUnblockTotal + nowUnblockTimeTotal;
+				ans.yesterday = this.unblockState.yesterdayUnblockTotal;
+			} else {
+				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDay(),0,0,0).getTime();
+				ans.yesterday = this.unblockState.todayUnblockTotal + today0HourTime - this.unblockState.switchTime;
+				ans.today = date.getTime() - today0HourTime;
+			}
+		} else if(isSameDay) {
+			ans.yesterday = this.unblockState.yesterdayUnblockTotal;
+			ans.today = this.unblockState.todayUnblockTotal;
+		} else {
+			ans.yesterday = this.unblockState.todayUnblockTotal;
+			ans.today = 0;
+		}
+		return ans;
+	}
+	,checkUnblock: function() {
+		console.log("checkUnblock");
+		if(!this.unblockState.isUnblock) return false;
+		var date = new Date();
+		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;
+		console.log([date.getTime(),endTime]);
+		if(date.getTime() < endTime) return true;
+		var endDate = (function($this) {
+			var $r;
+			var d = new Date();
+			d.setTime(endTime);
+			$r = d;
+			return $r;
+		}(this));
+		var totalTimeKit = this.calcTotalTime(endDate);
+		this.unblockState = new storage.UnblockState();
+		this.unblockState.isUnblock = false;
+		this.unblockState.switchTime = endTime;
+		this.unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+		this.unblockState.todayUnblockTotal = totalTimeKit.today;
+		this.unblockState.unblockTime = -1;
+		this.flushItem("unblockState");
+		return false;
+	}
+	,startUnblock: function(unblockTime) {
+		var date = new Date();
+		var nextUnblockState = new storage.UnblockState();
+		nextUnblockState.isUnblock = true;
+		if(this.unblockState.isUnblock) {
+			var passing = this.unblockState.switchTime - date.getTime();
+			nextUnblockState.unblockTime = passing + unblockTime;
+			nextUnblockState.switchTime = this.unblockState.switchTime;
+			nextUnblockState.yesterdayUnblockTotal = this.unblockState.yesterdayUnblockTotal;
+			nextUnblockState.todayUnblockTotal = this.unblockState.todayUnblockTotal;
+		} else {
+			var totalTimeKit = this.calcTotalTime(date);
+			nextUnblockState.switchTime = date.getTime();
+			nextUnblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+			nextUnblockState.todayUnblockTotal = totalTimeKit.today;
+			nextUnblockState.unblockTime = unblockTime;
+		}
+		this.unblockState = nextUnblockState;
+		this.flushItem("unblockState");
+	}
+	,window_storageHandler_: function(key) {
+		this.loadData(key);
+		if(this.callbackStorageChange != null) this.callbackStorageChange(key);
+	}
+	,window_storageHandler: function(event) {
+		Note.log("window_storage " + Std.string(event));
+		var storageEvent = event;
+		this.window_storageHandler_(storageEvent.key);
+	}
+	,setCallback: function(callbackStorageChange) {
+		this.callbackStorageChange = callbackStorageChange;
+	}
+	,loadAllValue: function() {
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		while(_g < _g1.length) {
+			var key = _g1[_g];
+			++_g;
+			this.loadData(key);
+		}
+	}
+	,createAllDefault: function() {
+		var _g = 0, _g1 = ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+		while(_g < _g1.length) {
+			var key = _g1[_g];
+			++_g;
+			this.createDefault(key);
+		}
+	}
+	,getVersion: function() {
+		var versionText = this.storage.getItem("version");
+		if(versionText == null) return -1;
+		return Std.parseInt(versionText);
+	}
+	,createDefault: function(key) {
+		switch(key) {
+		case "version":
+			break;
+		case "unblockTimeList":
+			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
+			break;
+		case "unblockTimeDefaultIndex":
+			this.unblockTimeDefaultIndex = 2;
+			break;
+		case "unblockState":
+			this.unblockState = storage.UnblockState.createDefault();
+			break;
+		case "whitelist":
+			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.co.jp/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			break;
+		case "whitelistUseRegexp":
+			this.whitelistUseRegexp = false;
+			break;
+		case "blacklist":
+			this.blacklist = [];
+			break;
+		case "blacklistUseRegexp":
+			this.blacklistUseRegexp = false;
+			break;
+		case "laterList":
+			this.laterList = [];
+			break;
+		default:
+			throw "対応していない値です key=" + key;
+		}
+		this.flushItem(key);
+	}
+	,getObject: function(key) {
+		return haxe.Json.parse(this.storage.getItem(key));
+	}
+	,getArrayBool: function(key) {
+		return this.storage.getItem(key) == "true";
+	}
+	,getArrayString: function(key) {
+		return haxe.Json.parse(this.storage.getItem(key));
+	}
+	,getArrayFloat: function(key) {
+		var list = haxe.Json.parse(this.storage.getItem(key));
+		return (function($this) {
+			var $r;
+			var _g = [];
+			{
+				var _g2 = 0, _g1 = list.length;
+				while(_g2 < _g1) {
+					var i = _g2++;
+					_g.push(Std.parseFloat(list[i]));
+				}
+			}
+			$r = _g;
+			return $r;
+		}(this));
+	}
+	,loadData: function(key) {
+		Note.log("loadData " + key);
+		switch(key) {
+		case "version":
+			break;
+		case "unblockTimeList":
+			this.unblockTimeList = this.getArrayFloat(key);
+			break;
+		case "unblockTimeDefaultIndex":
+			this.unblockTimeDefaultIndex = Std.parseInt(this.storage.getItem(key));
+			break;
+		case "unblockState":
+			this.unblockState = storage.UnblockState.createFromJson(this.storage.getItem(key));
+			break;
+		case "whitelist":
+			this.whitelist = this.getArrayString(key);
+			break;
+		case "whitelistUseRegexp":
+			this.whitelistUseRegexp = this.getArrayBool(key);
+			break;
+		case "blacklist":
+			this.blacklist = this.getArrayString(key);
+			break;
+		case "blacklistUseRegexp":
+			this.blacklistUseRegexp = this.getArrayBool(key);
+			break;
+		case "laterList":
+			this.laterList = common.Page.createArrayFromJson(this.getObject(key));
+			break;
+		default:
+			throw "対応していない値です key=" + key;
+		}
+	}
+	,setIntItem: function(key,value) {
+		this.storage.setItem(key,Std.string(this.unblockTimeDefaultIndex));
+	}
+	,setBoolItem: function(key,value) {
+		this.storage.setItem(key,value?"true":"false");
+	}
+	,setJsonItem: function(key,value) {
+		this.storage.setItem(key,haxe.Json.stringify(value));
+	}
+	,flushItem: function(key) {
+		Note.log("flushItem " + key);
+		switch(key) {
+		case "version":
+			this.setIntItem(key,1);
+			break;
+		case "unblockTimeList":
+			this.setJsonItem(key,this.unblockTimeList);
+			break;
+		case "unblockTimeDefaultIndex":
+			this.setIntItem(key,this.unblockTimeDefaultIndex);
+			break;
+		case "unblockState":
+			this.setJsonItem(key,this.unblockState);
+			break;
+		case "whitelist":
+			this.setJsonItem(key,this.whitelist);
+			break;
+		case "whitelistUseRegexp":
+			this.setBoolItem(key,this.whitelistUseRegexp);
+			break;
+		case "blacklist":
+			this.setJsonItem(key,this.blacklist);
+			break;
+		case "blacklistUseRegexp":
+			this.setBoolItem(key,this.blacklistUseRegexp);
+			break;
+		case "laterList":
+			this.setJsonItem(key,this.laterList);
+			break;
+		default:
+			throw "対応していない値です key=" + key;
+		}
+		this.window_storageHandler_(key);
+	}
+	,removeLaterList: function(value) {
+		HxOverrides.remove(this.laterList,value);
+		this.flushItem("laterList");
+	}
+	,addLaterList: function(value) {
+		this.laterList.push(value);
+		this.flushItem("laterList");
+	}
+	,getLaterList: function() {
+		return common.Page.arrayClone(this.laterList);
+	}
+	,setBlacklistUseRegexp: function(value) {
+		this.blacklistUseRegexp = value;
+		this.flushItem("blacklistUseRegexp");
+		return this.blacklistUseRegexp;
+	}
+	,setBlacklist: function(value) {
+		this.blacklist = value;
+		this.flushItem("blacklist");
+	}
+	,getBlacklist: function() {
+		return this.blacklist.slice();
+	}
+	,setWhitelistUseRegexp: function(value) {
+		this.whitelistUseRegexp = value;
+		this.flushItem("whitelistUseRegexp");
+		return this.whitelistUseRegexp;
+	}
+	,addWhitelist: function(value) {
+		Note.log("addWhitelist" + Std.string(this.whitelist));
+		this.whitelist.push(value);
+		this.flushItem("whitelist");
+	}
+	,setWhitelist: function(value) {
+		this.whitelist = value;
+		this.flushItem("whitelist");
+	}
+	,getWhitelist: function() {
+		return this.whitelist.slice();
+	}
+	,getUnblockState: function() {
+		return this.unblockState.clone();
+	}
+	,setUnblockTimeDefaultIndex: function(value) {
+		this.unblockTimeDefaultIndex = value;
+		this.flushItem("unblockTimeDefaultIndex");
+		return this.unblockTimeDefaultIndex;
+	}
+	,setUnblockTimeList: function(value) {
+		this.unblockTimeList = value;
+		this.flushItem("unblockTimeList");
+	}
+	,getUnblockTimeList: function() {
+		return this.unblockTimeList.slice();
+	}
+	,__class__: storage.LocalStorageDetail
+}
+storage.LocalStorageFactory = function() {
+};
+storage.LocalStorageFactory.__name__ = true;
+storage.LocalStorageFactory.prototype = {
+	create: function(callbackStorageChange,forceClear) {
+		var storageDetail = new storage.LocalStorageDetail(js.Browser.getLocalStorage(),js.Browser.window);
+		var isFirstChange = false;
+		var version = storageDetail.getVersion();
+		if(version == -1 || forceClear) {
+			storageDetail.createAllDefault();
+			Note.log("ストレージデータを生成しました");
+			version = storageDetail.getVersion();
+			isFirstChange = true;
+		}
+		if(version < 1) {
+			version = storageDetail.getVersion();
+			isFirstChange = true;
+		}
+		if(1 < version) {
+			storageDetail.createAllDefault();
+			version = storageDetail.getVersion();
+			isFirstChange = true;
+			throw "保存されているデータに対して、古いバージョンのエクステンションが使用されました。";
+		}
+		storageDetail.loadAllValue();
+		storageDetail.setCallback(callbackStorageChange);
+		return storageDetail;
+	}
+	,__class__: storage.LocalStorageFactory
+}
+storage.LocalStorageKey = function() { }
+storage.LocalStorageKey.__name__ = true;
+storage.LocalStorageKey.KEY_LIST = function() {
+	return ["version","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
+}
+storage.UnblockState = function() {
+	this.isUnblock = false;
+	this.todayUnblockTotal = 0;
+	this.yesterdayUnblockTotal = 0;
+	this.switchTime = new Date().getTime();
+	this.unblockTime = 0;
+};
+storage.UnblockState.__name__ = true;
+storage.UnblockState.createDefault = function() {
+	return new storage.UnblockState();
+}
+storage.UnblockState.createFromJson = function(jsonText) {
+	var jsonData = haxe.Json.parse(jsonText);
+	var ans = new storage.UnblockState();
+	ans.isUnblock = jsonData.isUnblock;
+	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
+	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
+	ans.switchTime = Std.parseFloat(jsonData.switchTime);
+	ans.unblockTime = Std.parseFloat(jsonData.unblockTime);
+	return ans;
+}
+storage.UnblockState.prototype = {
+	clone: function() {
+		var ans = new storage.UnblockState();
+		ans.isUnblock = this.isUnblock;
+		ans.todayUnblockTotal = this.todayUnblockTotal;
+		ans.yesterdayUnblockTotal = this.yesterdayUnblockTotal;
+		ans.switchTime = this.switchTime;
+		ans.unblockTime = this.unblockTime;
+		return ans;
+	}
+	,__class__: storage.UnblockState
+}
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
@@ -1691,16 +1692,6 @@ var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
-LocalStorageDetail.STORAGE_VERSION = 1;
-LocalStorageKey.VERSION = "version";
-LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
-LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
-LocalStorageKey.UNBLOCK_STATE = "unblockState";
-LocalStorageKey.WHITELIST = "whitelist";
-LocalStorageKey.WHITELIST_USE_REGEXP = "whitelistUseRegexp";
-LocalStorageKey.BLACKLIST = "blacklist";
-LocalStorageKey.BLACKLIST_USE_REGEXP = "blacklistUseRegexp";
-LocalStorageKey.LATER_LIST = "laterList";
 common.StringUtil.DOT_NUM = 3;
 common.StringUtil.DOTS = "...";
 haxe.Template.splitter = new EReg("(::[A-Za-z0-9_ ()&|!+=/><*.\"-]+::|\\$\\$([A-Za-z0-9_-]+)\\()","");
@@ -1710,4 +1701,14 @@ haxe.Template.expr_int = new EReg("^[0-9]+$","");
 haxe.Template.expr_float = new EReg("^([+-]?)(?=\\d|,\\d)\\d*(,\\d*)?([Ee]([+-]?\\d+))?$","");
 haxe.Template.globals = { };
 js.Browser.window = typeof window != "undefined" ? window : null;
+storage.LocalStorageDetail.STORAGE_VERSION = 1;
+storage.LocalStorageKey.VERSION = "version";
+storage.LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
+storage.LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
+storage.LocalStorageKey.UNBLOCK_STATE = "unblockState";
+storage.LocalStorageKey.WHITELIST = "whitelist";
+storage.LocalStorageKey.WHITELIST_USE_REGEXP = "whitelistUseRegexp";
+storage.LocalStorageKey.BLACKLIST = "blacklist";
+storage.LocalStorageKey.BLACKLIST_USE_REGEXP = "blacklistUseRegexp";
+storage.LocalStorageKey.LATER_LIST = "laterList";
 Option.main();

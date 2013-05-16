@@ -1,4 +1,6 @@
 package ;
+import common.Page;
+import storage.LocalStorageDetail;
 import common.StringUtil;
 import haxe.web.Dispatch;
 import haxe.Template;

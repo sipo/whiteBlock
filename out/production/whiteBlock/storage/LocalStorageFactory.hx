@@ -1,4 +1,4 @@
-package ;
+package storage;
 import js.html.Event;
 import Std;
 import js.Browser;
