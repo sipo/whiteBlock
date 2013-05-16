@@ -1,5 +1,5 @@
-var $estr = function() { return js.Boot.__string_rec(this,''); };
-var Background = function() {
+var $hxClasses = $hxClasses || {},$estr = function() { return js.Boot.__string_rec(this,''); };
+var Background = $hxClasses["Background"] = function() {
 	var factory = new LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),true);
 	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updatedHandler));
@@ -32,14 +32,14 @@ Background.prototype = {
 	}
 	,tab_updatedHandler: function(tabId,changedInfo,tab) {
 		Note.log("tab_updated");
-		this.localStorageDetail.loadAllValue();
 		var targetUrl = tab.url;
+		var targetUrlNoGet = targetUrl.split("?")[0];
 		var blockUrl = chrome.extension.getURL("block.html");
 		if(targetUrl == null || targetUrl == "null") {
 			Note.log("null除外");
 			return;
 		}
-		if(targetUrl == blockUrl) {
+		if(targetUrlNoGet == blockUrl) {
 			Note.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
@@ -48,19 +48,31 @@ Background.prototype = {
 			Note.log("webページじゃない場合除外");
 			return;
 		}
+		this.localStorageDetail.loadAllValue();
 		if(this.checkList(targetUrl,this.localStorageDetail.getWhitelist(),this.localStorageDetail.whitelistUseRegexp)) {
 			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
 		if(this.localStorageDetail.checkUnblock()) return;
 		Note.log("ブロック " + targetUrl);
-		this.localStorageDetail.setLastBlockPage(new LaterPage(tab.title,targetUrl));
+		this.localStorageDetail.setLastBlockPage(new Page(tab.title,targetUrl));
+		var params = new haxe.ds.StringMap();
+		params.set("title",tab.title);
+		params.set("url",targetUrl);
+		var paramsStrings = [];
+		var $it0 = params.keys();
+		while( $it0.hasNext() ) {
+			var key = $it0.next();
+			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));
+		}
+		blockUrl += "?" + paramsStrings.join("&");
+		Note.debug(Std.string(blockUrl));
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
 	}
 	,storage_changeHandler: function(key) {
 	}
 	,__class__: Background
 }
-var EReg = function(r,opt) {
+var EReg = $hxClasses["EReg"] = function(r,opt) {
 	opt = opt.split("u").join("");
 	this.r = new RegExp(r,opt);
 };
@@ -74,7 +86,7 @@ EReg.prototype = {
 	}
 	,__class__: EReg
 }
-var HxOverrides = function() { }
+var HxOverrides = $hxClasses["HxOverrides"] = function() { }
 HxOverrides.__name__ = true;
 HxOverrides.cca = function(s,index) {
 	var x = s.charCodeAt(index);
@@ -109,42 +121,7 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
-var LaterPage = function(title,url) {
-	this.title = title;
-	this.url = url;
-};
-LaterPage.__name__ = true;
-LaterPage.arrayClone = function(list) {
-	return (function($this) {
-		var $r;
-		var _g = [];
-		{
-			var _g2 = 0, _g1 = list.length;
-			while(_g2 < _g1) {
-				var i = _g2++;
-				_g.push(list[i].clone());
-			}
-		}
-		$r = _g;
-		return $r;
-	}(this));
-}
-LaterPage.createArrayFromJson = function(jsonData) {
-	var ans = [];
-	var _g1 = 0, _g = jsonData.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		ans.push(new LaterPage(jsonData[i].title,jsonData[i].url));
-	}
-	return ans;
-}
-LaterPage.prototype = {
-	clone: function() {
-		return new LaterPage(this.title,this.url);
-	}
-	,__class__: LaterPage
-}
-var LocalStorageDetail = function(storage,window) {
+var LocalStorageDetail = $hxClasses["LocalStorageDetail"] = function(storage,window) {
 	Note.log("LocalStorageDetail constractor");
 	this.storage = storage;
 	window.addEventListener("storage",$bind(this,this.window_storageHandler));
@@ -222,7 +199,6 @@ LocalStorageDetail.prototype = {
 			nextUnblockState.unblockTime = unblockTime;
 		}
 		this.unblockState = nextUnblockState;
-		Note.debug("a" + Std.string(this.unblockState));
 		this.flushItem("unblockState");
 	}
 	,window_storageHandler_: function(key) {
@@ -263,7 +239,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = new LaterPage(null,null);
+			this.lastBlockPage = new Page("","");
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -294,6 +270,9 @@ LocalStorageDetail.prototype = {
 		}
 		this.flushItem(key);
 	}
+	,getObject: function(key) {
+		return haxe.Json.parse(this.storage.getItem(key));
+	}
 	,getArrayBool: function(key) {
 		return this.storage.getItem(key) == "true";
 	}
@@ -322,7 +301,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = haxe.Json.parse(this.storage.getItem(key));
+			this.lastBlockPage = Page.createFromJson(this.getObject(key));
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
@@ -332,7 +311,6 @@ LocalStorageDetail.prototype = {
 			break;
 		case "unblockState":
 			this.unblockState = UnblockState.createFromJson(this.storage.getItem(key));
-			Note.debug("c" + Std.string(this.unblockState));
 			break;
 		case "whitelist":
 			this.whitelist = this.getArrayString(key);
@@ -347,7 +325,7 @@ LocalStorageDetail.prototype = {
 			this.blacklistUseRegexp = this.getArrayBool(key);
 			break;
 		case "laterList":
-			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
+			this.laterList = Page.createArrayFromJson(this.getObject(key));
 			break;
 		default:
 			throw "対応していない値です key=" + key;
@@ -409,7 +387,7 @@ LocalStorageDetail.prototype = {
 		this.flushItem("laterList");
 	}
 	,getLaterList: function() {
-		return LaterPage.arrayClone(this.laterList);
+		return Page.arrayClone(this.laterList);
 	}
 	,setBlacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;
@@ -472,7 +450,7 @@ LocalStorageDetail.prototype = {
 	}
 	,__class__: LocalStorageDetail
 }
-var LocalStorageFactory = function() {
+var LocalStorageFactory = $hxClasses["LocalStorageFactory"] = function() {
 };
 LocalStorageFactory.__name__ = true;
 LocalStorageFactory.prototype = {
@@ -502,12 +480,12 @@ LocalStorageFactory.prototype = {
 	}
 	,__class__: LocalStorageFactory
 }
-var LocalStorageKey = function() { }
+var LocalStorageKey = $hxClasses["LocalStorageKey"] = function() { }
 LocalStorageKey.__name__ = true;
 LocalStorageKey.KEY_LIST = function() {
 	return ["version","lastBlockPage","unblockTimeList","unblockTimeDefaultIndex","unblockState","whitelist","whitelistUseRegexp","blacklist","blacklistUseRegexp","laterList"];
 }
-var Note = function() {
+var Note = $hxClasses["Note"] = function() {
 };
 Note.__name__ = true;
 Note.log = function(message) {
@@ -519,7 +497,45 @@ Note.debug = function(message) {
 Note.prototype = {
 	__class__: Note
 }
-var Reflect = function() { }
+var Page = $hxClasses["Page"] = function(title,url) {
+	this.title = title;
+	this.url = url;
+};
+Page.__name__ = true;
+Page.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
+}
+Page.createFromJson = function(jsonData) {
+	return new Page(jsonData.title,jsonData.url);
+}
+Page.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new Page(jsonData[i].title,jsonData[i].url));
+	}
+	return ans;
+}
+Page.prototype = {
+	clone: function() {
+		return new Page(this.title,this.url);
+	}
+	,__class__: Page
+}
+var Reflect = $hxClasses["Reflect"] = function() { }
 Reflect.__name__ = true;
 Reflect.field = function(o,field) {
 	var v = null;
@@ -542,7 +558,7 @@ Reflect.fields = function(o) {
 Reflect.isFunction = function(f) {
 	return typeof(f) == "function" && !(f.__name__ || f.__ename__);
 }
-var Std = function() { }
+var Std = $hxClasses["Std"] = function() { }
 Std.__name__ = true;
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
@@ -556,7 +572,7 @@ Std.parseInt = function(x) {
 Std.parseFloat = function(x) {
 	return parseFloat(x);
 }
-var StringBuf = function() {
+var StringBuf = $hxClasses["StringBuf"] = function() {
 	this.b = "";
 };
 StringBuf.__name__ = true;
@@ -566,7 +582,12 @@ StringBuf.prototype = {
 	}
 	,__class__: StringBuf
 }
-var ValueType = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
+var StringTools = $hxClasses["StringTools"] = function() { }
+StringTools.__name__ = true;
+StringTools.urlEncode = function(s) {
+	return encodeURIComponent(s);
+}
+var ValueType = $hxClasses["ValueType"] = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
 ValueType.TNull = ["TNull",0];
 ValueType.TNull.toString = $estr;
 ValueType.TNull.__enum__ = ValueType;
@@ -590,8 +611,18 @@ ValueType.TEnum = function(e) { var $x = ["TEnum",7,e]; $x.__enum__ = ValueType;
 ValueType.TUnknown = ["TUnknown",8];
 ValueType.TUnknown.toString = $estr;
 ValueType.TUnknown.__enum__ = ValueType;
-var Type = function() { }
+var Type = $hxClasses["Type"] = function() { }
 Type.__name__ = true;
+Type.resolveClass = function(name) {
+	var cl = $hxClasses[name];
+	if(cl == null || !cl.__name__) return null;
+	return cl;
+}
+Type.resolveEnum = function(name) {
+	var e = $hxClasses[name];
+	if(e == null || !e.__ename__) return null;
+	return e;
+}
 Type["typeof"] = function(v) {
 	var _g = typeof(v);
 	switch(_g) {
@@ -621,7 +652,7 @@ Type["typeof"] = function(v) {
 Type.enumIndex = function(e) {
 	return e[1];
 }
-var UnblockState = function() {
+var UnblockState = $hxClasses["UnblockState"] = function() {
 	this.isUnblock = false;
 	this.todayUnblockTotal = 0;
 	this.yesterdayUnblockTotal = 0;
@@ -635,7 +666,6 @@ UnblockState.createDefault = function() {
 UnblockState.createFromJson = function(jsonText) {
 	var jsonData = haxe.Json.parse(jsonText);
 	var ans = new UnblockState();
-	Note.debug(["e",jsonData.isUnblock,Type["typeof"](jsonData.isUnblock)]);
 	ans.isUnblock = jsonData.isUnblock;
 	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
 	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
@@ -656,21 +686,21 @@ UnblockState.prototype = {
 	,__class__: UnblockState
 }
 var chrome = chrome || {}
-chrome.CaptureFormat = { __ename__ : true, __constructs__ : ["jpeg","png"] }
+chrome.CaptureFormat = $hxClasses["chrome.CaptureFormat"] = { __ename__ : true, __constructs__ : ["jpeg","png"] }
 chrome.CaptureFormat.jpeg = ["jpeg",0];
 chrome.CaptureFormat.jpeg.toString = $estr;
 chrome.CaptureFormat.jpeg.__enum__ = chrome.CaptureFormat;
 chrome.CaptureFormat.png = ["png",1];
 chrome.CaptureFormat.png.toString = $estr;
 chrome.CaptureFormat.png.__enum__ = chrome.CaptureFormat;
-chrome.QueryStatus = { __ename__ : true, __constructs__ : ["loading","complete"] }
+chrome.QueryStatus = $hxClasses["chrome.QueryStatus"] = { __ename__ : true, __constructs__ : ["loading","complete"] }
 chrome.QueryStatus.loading = ["loading",0];
 chrome.QueryStatus.loading.toString = $estr;
 chrome.QueryStatus.loading.__enum__ = chrome.QueryStatus;
 chrome.QueryStatus.complete = ["complete",1];
 chrome.QueryStatus.complete.toString = $estr;
 chrome.QueryStatus.complete.__enum__ = chrome.QueryStatus;
-chrome.RunAt = { __ename__ : true, __constructs__ : ["document_start","document_end","document_idle"] }
+chrome.RunAt = $hxClasses["chrome.RunAt"] = { __ename__ : true, __constructs__ : ["document_start","document_end","document_idle"] }
 chrome.RunAt.document_start = ["document_start",0];
 chrome.RunAt.document_start.toString = $estr;
 chrome.RunAt.document_start.__enum__ = chrome.RunAt;
@@ -680,7 +710,7 @@ chrome.RunAt.document_end.__enum__ = chrome.RunAt;
 chrome.RunAt.document_idle = ["document_idle",2];
 chrome.RunAt.document_idle.toString = $estr;
 chrome.RunAt.document_idle.__enum__ = chrome.RunAt;
-chrome.WindowType = { __ename__ : true, __constructs__ : ["normal","popup","panel","app"] }
+chrome.WindowType = $hxClasses["chrome.WindowType"] = { __ename__ : true, __constructs__ : ["normal","popup","panel","app"] }
 chrome.WindowType.normal = ["normal",0];
 chrome.WindowType.normal.toString = $estr;
 chrome.WindowType.normal.__enum__ = chrome.WindowType;
@@ -693,7 +723,7 @@ chrome.WindowType.panel.__enum__ = chrome.WindowType;
 chrome.WindowType.app = ["app",3];
 chrome.WindowType.app.toString = $estr;
 chrome.WindowType.app.__enum__ = chrome.WindowType;
-chrome.WindowState = { __ename__ : true, __constructs__ : ["normal","minimized","maximized"] }
+chrome.WindowState = $hxClasses["chrome.WindowState"] = { __ename__ : true, __constructs__ : ["normal","minimized","maximized"] }
 chrome.WindowState.normal = ["normal",0];
 chrome.WindowState.normal.toString = $estr;
 chrome.WindowState.normal.__enum__ = chrome.WindowState;
@@ -704,7 +734,7 @@ chrome.WindowState.maximized = ["maximized",2];
 chrome.WindowState.maximized.toString = $estr;
 chrome.WindowState.maximized.__enum__ = chrome.WindowState;
 var haxe = haxe || {}
-haxe.Json = function() {
+haxe.Json = $hxClasses["haxe.Json"] = function() {
 };
 haxe.Json.__name__ = true;
 haxe.Json.parse = function(text) {
@@ -1023,7 +1053,9 @@ haxe.Json.prototype = {
 	,__class__: haxe.Json
 }
 if(!haxe.ds) haxe.ds = {}
-haxe.ds.StringMap = function() { }
+haxe.ds.StringMap = $hxClasses["haxe.ds.StringMap"] = function() {
+	this.h = { };
+};
 haxe.ds.StringMap.__name__ = true;
 haxe.ds.StringMap.prototype = {
 	keys: function() {
@@ -1036,10 +1068,13 @@ haxe.ds.StringMap.prototype = {
 	,get: function(key) {
 		return this.h["$" + key];
 	}
+	,set: function(key,value) {
+		this.h["$" + key] = value;
+	}
 	,__class__: haxe.ds.StringMap
 }
 var js = js || {}
-js.Boot = function() { }
+js.Boot = $hxClasses["js.Boot"] = function() { }
 js.Boot.__name__ = true;
 js.Boot.__string_rec = function(o,s) {
 	if(o == null) return "null";
@@ -1107,7 +1142,49 @@ js.Boot.__string_rec = function(o,s) {
 		return String(o);
 	}
 }
-js.Browser = function() { }
+js.Boot.__interfLoop = function(cc,cl) {
+	if(cc == null) return false;
+	if(cc == cl) return true;
+	var intf = cc.__interfaces__;
+	if(intf != null) {
+		var _g1 = 0, _g = intf.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var i1 = intf[i];
+			if(i1 == cl || js.Boot.__interfLoop(i1,cl)) return true;
+		}
+	}
+	return js.Boot.__interfLoop(cc.__super__,cl);
+}
+js.Boot.__instanceof = function(o,cl) {
+	try {
+		if(o instanceof cl) {
+			if(cl == Array) return o.__enum__ == null;
+			return true;
+		}
+		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
+	} catch( e ) {
+		if(cl == null) return false;
+	}
+	switch(cl) {
+	case Int:
+		return Math.ceil(o%2147483648.0) === o;
+	case Float:
+		return typeof(o) == "number";
+	case Bool:
+		return o === true || o === false;
+	case String:
+		return typeof(o) == "string";
+	case Dynamic:
+		return true;
+	default:
+		if(o == null) return false;
+		if(cl == Class && o.__name__ != null) return true; else null;
+		if(cl == Enum && o.__ename__ != null) return true; else null;
+		return o.__enum__ == cl;
+	}
+}
+js.Browser = $hxClasses["js.Browser"] = function() { }
 js.Browser.__name__ = true;
 js.Browser.getLocalStorage = function() {
 	try {
@@ -1131,18 +1208,27 @@ Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
 Math.POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
+$hxClasses.Math = Math;
 Math.isFinite = function(i) {
 	return isFinite(i);
 };
 Math.isNaN = function(i) {
 	return isNaN(i);
 };
-String.prototype.__class__ = String;
+String.prototype.__class__ = $hxClasses.String = String;
 String.__name__ = true;
-Array.prototype.__class__ = Array;
+Array.prototype.__class__ = $hxClasses.Array = Array;
 Array.__name__ = true;
-Date.prototype.__class__ = Date;
+Date.prototype.__class__ = $hxClasses.Date = Date;
 Date.__name__ = ["Date"];
+var Int = $hxClasses.Int = { __name__ : ["Int"]};
+var Dynamic = $hxClasses.Dynamic = { __name__ : ["Dynamic"]};
+var Float = $hxClasses.Float = Number;
+Float.__name__ = ["Float"];
+var Bool = $hxClasses.Bool = Boolean;
+Bool.__ename__ = ["Bool"];
+var Class = $hxClasses.Class = { __name__ : ["Class"]};
+var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;

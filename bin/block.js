@@ -3,8 +3,9 @@ var Block = function() {
 	this.isReady = false;
 	var factory = new LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
-	this.lastBlockPage = this.localStorageDetail.getLastBlockPage();
-	this.view = new BlockView(this);
+	var params = haxe.web.Request.getParams();
+	this.lastBlockPage = new Page(StringTools.urlDecode(params.get("title")),StringTools.urlDecode(params.get("url")));
+	this.view = new BlockView(this,this.localStorageDetail);
 	new js.JQuery("document").ready($bind(this,this.document_readyHandler));
 };
 Block.__name__ = true;
@@ -19,19 +20,25 @@ Block.prototype = {
 	,startUnblock: function(unblockTime) {
 		this.localStorageDetail.startUnblock(unblockTime);
 	}
+	,addLaterList: function() {
+		this.localStorageDetail.addLaterList(this.lastBlockPage.clone());
+	}
 	,storage_changeHandler: function(key) {
 		if(!this.isReady) return;
 		Note.log("storage_change" + key);
 	}
 	,document_readyHandler: function(event) {
+		var factory = new LocalStorageFactory();
+		this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 		this.isReady = true;
 		this.view.initialize();
 		this.view.draw(this.lastBlockPage);
 	}
 	,__class__: Block
 }
-var BlockView = function(block) {
+var BlockView = function(block,localStorageDetail) {
 	this.block = block;
+	this.localStorageDetail = localStorageDetail;
 };
 BlockView.__name__ = true;
 BlockView.prototype = {
@@ -43,7 +50,13 @@ BlockView.prototype = {
 		Note.log("unblock_clickHandler");
 		this.block.startUnblock(this.unblockTime.getValue());
 	}
+	,addLaterList_clickHandler: function(event) {
+	}
 	,draw: function(lastBlockPage) {
+		Note.log("draw");
+		this.title_text.text(lastBlockPage.title);
+		this.url_text.text(lastBlockPage.url);
+		this.unblockTime.draw(this.localStorageDetail.getUnblockTimeList(),this.localStorageDetail.unblockTimeDefaultIndex);
 		var url = lastBlockPage.url;
 		this.addWhitelistText_input.val(url);
 		var fieldSize = url.length;
@@ -51,13 +64,17 @@ BlockView.prototype = {
 		this.addWhitelistText_input.attr("size",fieldSize);
 	}
 	,initialize: function() {
+		this.title_text = new js.JQuery("#title");
+		this.url_text = new js.JQuery("#url");
 		this.addLaterList_clickable = new js.JQuery("#addLaterList");
 		this.blockTime_text = new js.JQuery("#blockTime");
 		this.unblockTime = new commonView.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.unblock_clickable = new js.JQuery("#unblock");
 		this.addWhiteList_clickable = new js.JQuery("#addWhiteList");
 		this.addWhitelistText_input = new js.JQuery("#addWhitelistText");
+		this.addLaterList_clickable.click($bind(this,this.addLaterList_clickHandler));
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
+		this.addWhiteList_clickable.click($bind(this,this.addWhiteList_clickHandler));
 	}
 	,__class__: BlockView
 }
@@ -67,7 +84,11 @@ var EReg = function(r,opt) {
 };
 EReg.__name__ = true;
 EReg.prototype = {
-	matchedPos: function() {
+	split: function(s) {
+		var d = "#__delim__#";
+		return s.replace(this.r,d).split(d);
+	}
+	,matchedPos: function() {
 		if(this.r.m == null) throw "No string matched";
 		return { pos : this.r.m.index, len : this.r.m[0].length};
 	}
@@ -125,41 +146,6 @@ HxOverrides.iter = function(a) {
 	}, next : function() {
 		return this.arr[this.cur++];
 	}};
-}
-var LaterPage = function(title,url) {
-	this.title = title;
-	this.url = url;
-};
-LaterPage.__name__ = true;
-LaterPage.arrayClone = function(list) {
-	return (function($this) {
-		var $r;
-		var _g = [];
-		{
-			var _g2 = 0, _g1 = list.length;
-			while(_g2 < _g1) {
-				var i = _g2++;
-				_g.push(list[i].clone());
-			}
-		}
-		$r = _g;
-		return $r;
-	}(this));
-}
-LaterPage.createArrayFromJson = function(jsonData) {
-	var ans = [];
-	var _g1 = 0, _g = jsonData.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		ans.push(new LaterPage(jsonData[i].title,jsonData[i].url));
-	}
-	return ans;
-}
-LaterPage.prototype = {
-	clone: function() {
-		return new LaterPage(this.title,this.url);
-	}
-	,__class__: LaterPage
 }
 var List = function() {
 	this.length = 0;
@@ -282,7 +268,6 @@ LocalStorageDetail.prototype = {
 			nextUnblockState.unblockTime = unblockTime;
 		}
 		this.unblockState = nextUnblockState;
-		Note.debug("a" + Std.string(this.unblockState));
 		this.flushItem("unblockState");
 	}
 	,window_storageHandler_: function(key) {
@@ -323,7 +308,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = new LaterPage(null,null);
+			this.lastBlockPage = new Page("","");
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -354,6 +339,9 @@ LocalStorageDetail.prototype = {
 		}
 		this.flushItem(key);
 	}
+	,getObject: function(key) {
+		return haxe.Json.parse(this.storage.getItem(key));
+	}
 	,getArrayBool: function(key) {
 		return this.storage.getItem(key) == "true";
 	}
@@ -382,7 +370,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = haxe.Json.parse(this.storage.getItem(key));
+			this.lastBlockPage = Page.createFromJson(this.getObject(key));
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
@@ -392,7 +380,6 @@ LocalStorageDetail.prototype = {
 			break;
 		case "unblockState":
 			this.unblockState = UnblockState.createFromJson(this.storage.getItem(key));
-			Note.debug("c" + Std.string(this.unblockState));
 			break;
 		case "whitelist":
 			this.whitelist = this.getArrayString(key);
@@ -407,7 +394,7 @@ LocalStorageDetail.prototype = {
 			this.blacklistUseRegexp = this.getArrayBool(key);
 			break;
 		case "laterList":
-			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
+			this.laterList = Page.createArrayFromJson(this.getObject(key));
 			break;
 		default:
 			throw "対応していない値です key=" + key;
@@ -469,7 +456,7 @@ LocalStorageDetail.prototype = {
 		this.flushItem("laterList");
 	}
 	,getLaterList: function() {
-		return LaterPage.arrayClone(this.laterList);
+		return Page.arrayClone(this.laterList);
 	}
 	,setBlacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;
@@ -579,6 +566,44 @@ Note.debug = function(message) {
 Note.prototype = {
 	__class__: Note
 }
+var Page = function(title,url) {
+	this.title = title;
+	this.url = url;
+};
+Page.__name__ = true;
+Page.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
+}
+Page.createFromJson = function(jsonData) {
+	return new Page(jsonData.title,jsonData.url);
+}
+Page.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new Page(jsonData[i].title,jsonData[i].url));
+	}
+	return ans;
+}
+Page.prototype = {
+	clone: function() {
+		return new Page(this.title,this.url);
+	}
+	,__class__: Page
+}
 var Reflect = function() { }
 Reflect.__name__ = true;
 Reflect.hasField = function(o,field) {
@@ -628,6 +653,11 @@ StringBuf.prototype = {
 		this.b += len == null?HxOverrides.substr(s,pos,null):HxOverrides.substr(s,pos,len);
 	}
 	,__class__: StringBuf
+}
+var StringTools = function() { }
+StringTools.__name__ = true;
+StringTools.urlDecode = function(s) {
+	return decodeURIComponent(s.split("+").join(" "));
 }
 var ValueType = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
 ValueType.TNull = ["TNull",0];
@@ -698,7 +728,6 @@ UnblockState.createDefault = function() {
 UnblockState.createFromJson = function(jsonText) {
 	var jsonData = haxe.Json.parse(jsonText);
 	var ans = new UnblockState();
-	Note.debug(["e",jsonData.isUnblock,Type["typeof"](jsonData.isUnblock)]);
 	ans.isUnblock = jsonData.isUnblock;
 	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
 	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);
@@ -1456,7 +1485,9 @@ haxe.Template.prototype = {
 	,__class__: haxe.Template
 }
 if(!haxe.ds) haxe.ds = {}
-haxe.ds.StringMap = function() { }
+haxe.ds.StringMap = function() {
+	this.h = { };
+};
 haxe.ds.StringMap.__name__ = true;
 haxe.ds.StringMap.prototype = {
 	keys: function() {
@@ -1469,7 +1500,27 @@ haxe.ds.StringMap.prototype = {
 	,get: function(key) {
 		return this.h["$" + key];
 	}
+	,set: function(key,value) {
+		this.h["$" + key] = value;
+	}
 	,__class__: haxe.ds.StringMap
+}
+if(!haxe.web) haxe.web = {}
+haxe.web.Request = function() { }
+haxe.web.Request.__name__ = true;
+haxe.web.Request.getParams = function() {
+	var get = window.location.search.substr(1);
+	var params = new haxe.ds.StringMap();
+	var _g = 0, _g1 = new EReg("[&;]","g").split(get);
+	while(_g < _g1.length) {
+		var p = _g1[_g];
+		++_g;
+		var pl = p.split("=");
+		if(pl.length < 2) continue;
+		var name = pl.shift();
+		params.set(StringTools.urlDecode(name),StringTools.urlDecode(pl.join("=")));
+	}
+	return params;
 }
 var js = js || {}
 js.Boot = function() { }

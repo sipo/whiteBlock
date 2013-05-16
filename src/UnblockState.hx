@@ -51,7 +51,6 @@ class UnblockState
 	{
 		var jsonData:Dynamic = Json.parse(jsonText);
 		var ans:UnblockState = new UnblockState();
-		Note.debug(["e" , jsonData.isUnblock , Type.typeof(jsonData.isUnblock)]);
 		ans.isUnblock = jsonData.isUnblock;
 		ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
 		ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);

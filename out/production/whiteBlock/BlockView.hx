@@ -1,5 +1,4 @@
 package ;
-import LocalStorageDetail.Page;
 import commonView.UnblockTimeDownList;
 import js.JQuery;
 class BlockView {
@@ -32,9 +31,10 @@ class BlockView {
 	
 	private static inline var ADD_WHITELIST_TEXT_MAX_SIZE:Int = 100;
 	
-	public function new(block:Block)
+	public function new(block:Block, localStorageDetail:LocalStorageDetail)
 	{
 		this.block = block;
+		this.localStorageDetail = localStorageDetail;
 	}
 	
 	/**
@@ -43,6 +43,9 @@ class BlockView {
 	public function initialize()
 	{
 		// DOMの初期化
+		title_text = new JQuery("#title");
+		url_text = new JQuery("#url");
+		
 		addLaterList_clickable = new JQuery("#addLaterList");
 		
 		blockTime_text = new JQuery("#blockTime");
@@ -53,7 +56,9 @@ class BlockView {
 		addWhitelistText_input = new JQuery("#addWhitelistText");
 		
 		// イベントの登録
+		addLaterList_clickable.click(addLaterList_clickHandler);
 		unblock_clickable.click(unblock_clickHandler);
+		addWhiteList_clickable.click(addWhiteList_clickHandler);
 	}
 	
 	/**
@@ -61,6 +66,17 @@ class BlockView {
 	 */
 	public function draw(lastBlockPage:Page):Void
 	{
+		Note.log("draw");
+		// 基本情報表示
+		title_text.text(lastBlockPage.title);
+		url_text.text(lastBlockPage.url);
+		
+		
+		// ブロック解除
+		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultIndex);
+		
+	
+		// ホワイトリスト
 		// 最後にアクセスしたURLを候補に
 		var url:String = lastBlockPage.url;
 		addWhitelistText_input.val(url);
@@ -73,6 +89,14 @@ class BlockView {
 	/* ================================================================
 	 * イベント
 	 */
+	
+	/**
+	 * あとでリスト追加をクリック
+	 */
+	private function addLaterList_clickHandler(event:JqEvent):Void
+	{
+		
+	}
 	
 	/*
 	 * ブロック解除をクリック

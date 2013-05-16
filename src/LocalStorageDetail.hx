@@ -198,14 +198,13 @@ class LocalStorageDetail {
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = Json.parse(storage.getItem(key));
+				lastBlockPage = Page.createFromJson(getObject(key));
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 				unblockTimeDefaultIndex = Std.parseInt(storage.getItem(key));
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createFromJson(storage.getItem(key));
-				Note.debug("c" + unblockState);
 			case LocalStorageKey.WHITELIST:
 				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
@@ -215,7 +214,7 @@ class LocalStorageDetail {
 			case LocalStorageKey.BLACKLIST_USE_REGEXP:
 				blacklistUseRegexp = getArrayBool(key);
 			case LocalStorageKey.LATER_LIST:
-				laterList = Page.createArrayFromJson(storage.getItem(key));
+				laterList = Page.createArrayFromJson(getObject(key));
 			default :
 				throw "対応していない値です key=" + key;
 		}
@@ -236,6 +235,11 @@ class LocalStorageDetail {
 	{
 		return storage.getItem(key) == "true";
 	}
+	/* Storageから、Boolに変換して取得する */
+	private function getObject(key:String):Dynamic
+	{
+		return Json.parse(storage.getItem(key));
+	}
 	
 	private function createDefault(key:String):Void
 	{
@@ -243,7 +247,7 @@ class LocalStorageDetail {
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = new Page(null, null);
+				lastBlockPage = new Page("", "");
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
 					5 * 1000,
@@ -377,7 +381,6 @@ class LocalStorageDetail {
 		}
 		// 上書き
 		unblockState = nextUnblockState;
-		Note.debug("a" + unblockState);
 		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
 	}
 	
@@ -457,7 +460,3 @@ typedef TotalTimeKit = {
 	yesterday:Float
 }
 
-typedef Page = {
-	title:String,
-	url:String
-}

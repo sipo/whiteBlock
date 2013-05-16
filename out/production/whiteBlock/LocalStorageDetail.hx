@@ -23,12 +23,12 @@ class LocalStorageDetail {
 	 */
 	
 	/** 最後に開いたURL。正直これをLocalStorageでやり取りすると、複数タブを開いた時にバグると思うのだけど、今のところ他のやり方がわからない・・・。 */
-	private var lastBlockPage:LaterPage;
-	public function getLastBlockPage():LaterPage
+	private var lastBlockPage:Page;
+	public function getLastBlockPage():Page
 	{
 		return lastBlockPage.clone();
 	}
-	public function setLastBlockPage(value:LaterPage):LaterPage
+	public function setLastBlockPage(value:Page):Page
 	{
 		Note.log("setLastBlockPage" + value);
 		lastBlockPage = value;
@@ -123,17 +123,17 @@ class LocalStorageDetail {
 	}
 	
 	/** あとで見るリスト */
-	private var laterList:Array<LaterPage>;
-	public function getLaterList():Array<LaterPage>
+	private var laterList:Array<Page>;
+	public function getLaterList():Array<Page>
 	{
-		return LaterPage.arrayClone(laterList);	// クローンを返し、参照に触らせない
+		return Page.arrayClone(laterList);	// クローンを返し、参照に触らせない
 	}
-	public function addLaterList(value:LaterPage):Void
+	public function addLaterList(value:Page):Void
 	{
 		laterList.push(value);	// 追加
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
 	}
-	public function removeLaterList(value:LaterPage):Void
+	public function removeLaterList(value:Page):Void
 	{
 		laterList.remove(value);	// 削除
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
@@ -198,14 +198,13 @@ class LocalStorageDetail {
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = Json.parse(storage.getItem(key));
+				lastBlockPage = Page.createFromJson(getObject(key));
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = getArrayFloat(key);
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
 				unblockTimeDefaultIndex = Std.parseInt(storage.getItem(key));
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createFromJson(storage.getItem(key));
-				Note.debug("c" + unblockState);
 			case LocalStorageKey.WHITELIST:
 				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
@@ -215,7 +214,7 @@ class LocalStorageDetail {
 			case LocalStorageKey.BLACKLIST_USE_REGEXP:
 				blacklistUseRegexp = getArrayBool(key);
 			case LocalStorageKey.LATER_LIST:
-				laterList = LaterPage.createArrayFromJson(storage.getItem(key));
+				laterList = Page.createArrayFromJson(getObject(key));
 			default :
 				throw "対応していない値です key=" + key;
 		}
@@ -236,6 +235,11 @@ class LocalStorageDetail {
 	{
 		return storage.getItem(key) == "true";
 	}
+	/* Storageから、Boolに変換して取得する */
+	private function getObject(key:String):Dynamic
+	{
+		return Json.parse(storage.getItem(key));
+	}
 	
 	private function createDefault(key:String):Void
 	{
@@ -243,7 +247,7 @@ class LocalStorageDetail {
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
 			case LocalStorageKey.LAST_BLOCK_PAGE:
-				lastBlockPage = new LaterPage(null, null);
+				lastBlockPage = new Page("", "");
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
 					5 * 1000,
@@ -377,7 +381,6 @@ class LocalStorageDetail {
 		}
 		// 上書き
 		unblockState = nextUnblockState;
-		Note.debug("a" + unblockState);
 		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
 	}
 	
@@ -457,7 +460,3 @@ typedef TotalTimeKit = {
 	yesterday:Float
 }
 
-typedef Page = {
-	title:String,
-	url:String
-}

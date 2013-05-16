@@ -1,5 +1,6 @@
 package ;
-import LocalStorageDetail.Page;
+import haxe.ds.StringMap;
+import haxe.web.Request;
 import js.html.Location;
 import js.JQuery;
 import js.html.DOMWindow;
@@ -42,9 +43,11 @@ class Block
 		var factory:LocalStorageFactory = new LocalStorageFactory();
 		localStorageDetail = factory.create(storage_changeHandler, false);
 		// 初期データの取得
-		lastBlockPage = localStorageDetail.getLastBlockPage();
+//		lastBlockPage = localStorageDetail.getLastBlockPage();
+		var params:StringMap<String> = Request.getParams();
+		lastBlockPage = new Page(StringTools.urlDecode(params.get("title")), StringTools.urlDecode(params.get("url")));	// TODO:定数化
 		// viewの用意
-		view = new BlockView(this);
+		view = new BlockView(this, localStorageDetail);
 		// 準備完了タイミングで初期描画
 		new JQuery("document").ready(document_readyHandler);
 	}
@@ -54,6 +57,8 @@ class Block
 	 */
 	private function document_readyHandler(event:JqEvent):Void
 	{
+		var factory:LocalStorageFactory = new LocalStorageFactory();
+		localStorageDetail = factory.create(storage_changeHandler, false);
 		isReady = true;
 		// 描画呼び出し
 		view.initialize();
@@ -74,6 +79,14 @@ class Block
 	 */
 	
 	/**
+	 * あとで見るリストに追加
+	 */
+	public function addLaterList():Void
+	{
+		localStorageDetail.addLaterList(lastBlockPage.clone());
+	}
+	
+	/**
 	 * ブロック解除開始
 	 */
 	public function startUnblock(unblockTime:Float):Void
@@ -90,6 +103,3 @@ class Block
 		Browser.window.location.assign(lastBlockPage.url);
 	}
 }
-
-
-// maxlength="20"

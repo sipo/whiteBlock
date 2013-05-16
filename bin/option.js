@@ -64,41 +64,6 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
-var LaterPage = function(title,url) {
-	this.title = title;
-	this.url = url;
-};
-LaterPage.__name__ = true;
-LaterPage.arrayClone = function(list) {
-	return (function($this) {
-		var $r;
-		var _g = [];
-		{
-			var _g2 = 0, _g1 = list.length;
-			while(_g2 < _g1) {
-				var i = _g2++;
-				_g.push(list[i].clone());
-			}
-		}
-		$r = _g;
-		return $r;
-	}(this));
-}
-LaterPage.createArrayFromJson = function(jsonData) {
-	var ans = [];
-	var _g1 = 0, _g = jsonData.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		ans.push(new LaterPage(jsonData[i].title,jsonData[i].url));
-	}
-	return ans;
-}
-LaterPage.prototype = {
-	clone: function() {
-		return new LaterPage(this.title,this.url);
-	}
-	,__class__: LaterPage
-}
 var List = function() {
 	this.length = 0;
 };
@@ -220,7 +185,6 @@ LocalStorageDetail.prototype = {
 			nextUnblockState.unblockTime = unblockTime;
 		}
 		this.unblockState = nextUnblockState;
-		Note.debug("a" + Std.string(this.unblockState));
 		this.flushItem("unblockState");
 	}
 	,window_storageHandler_: function(key) {
@@ -261,7 +225,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = new LaterPage(null,null);
+			this.lastBlockPage = new Page("","");
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
@@ -292,6 +256,9 @@ LocalStorageDetail.prototype = {
 		}
 		this.flushItem(key);
 	}
+	,getObject: function(key) {
+		return haxe.Json.parse(this.storage.getItem(key));
+	}
 	,getArrayBool: function(key) {
 		return this.storage.getItem(key) == "true";
 	}
@@ -320,7 +287,7 @@ LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "lastBlockPage":
-			this.lastBlockPage = haxe.Json.parse(this.storage.getItem(key));
+			this.lastBlockPage = Page.createFromJson(this.getObject(key));
 			break;
 		case "unblockTimeList":
 			this.unblockTimeList = this.getArrayFloat(key);
@@ -330,7 +297,6 @@ LocalStorageDetail.prototype = {
 			break;
 		case "unblockState":
 			this.unblockState = UnblockState.createFromJson(this.storage.getItem(key));
-			Note.debug("c" + Std.string(this.unblockState));
 			break;
 		case "whitelist":
 			this.whitelist = this.getArrayString(key);
@@ -345,7 +311,7 @@ LocalStorageDetail.prototype = {
 			this.blacklistUseRegexp = this.getArrayBool(key);
 			break;
 		case "laterList":
-			this.laterList = LaterPage.createArrayFromJson(this.storage.getItem(key));
+			this.laterList = Page.createArrayFromJson(this.getObject(key));
 			break;
 		default:
 			throw "対応していない値です key=" + key;
@@ -407,7 +373,7 @@ LocalStorageDetail.prototype = {
 		this.flushItem("laterList");
 	}
 	,getLaterList: function() {
-		return LaterPage.arrayClone(this.laterList);
+		return Page.arrayClone(this.laterList);
 	}
 	,setBlacklistUseRegexp: function(value) {
 		this.blacklistUseRegexp = value;
@@ -660,6 +626,44 @@ OptionView.prototype = {
 	}
 	,__class__: OptionView
 }
+var Page = function(title,url) {
+	this.title = title;
+	this.url = url;
+};
+Page.__name__ = true;
+Page.arrayClone = function(list) {
+	return (function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g2 = 0, _g1 = list.length;
+			while(_g2 < _g1) {
+				var i = _g2++;
+				_g.push(list[i].clone());
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this));
+}
+Page.createFromJson = function(jsonData) {
+	return new Page(jsonData.title,jsonData.url);
+}
+Page.createArrayFromJson = function(jsonData) {
+	var ans = [];
+	var _g1 = 0, _g = jsonData.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		ans.push(new Page(jsonData[i].title,jsonData[i].url));
+	}
+	return ans;
+}
+Page.prototype = {
+	clone: function() {
+		return new Page(this.title,this.url);
+	}
+	,__class__: Page
+}
 var Reflect = function() { }
 Reflect.__name__ = true;
 Reflect.hasField = function(o,field) {
@@ -779,7 +783,6 @@ UnblockState.createDefault = function() {
 UnblockState.createFromJson = function(jsonText) {
 	var jsonData = haxe.Json.parse(jsonText);
 	var ans = new UnblockState();
-	Note.debug(["e",jsonData.isUnblock,Type["typeof"](jsonData.isUnblock)]);
 	ans.isUnblock = jsonData.isUnblock;
 	ans.todayUnblockTotal = Std.parseFloat(jsonData.todayUnblockTotal);
 	ans.yesterdayUnblockTotal = Std.parseFloat(jsonData.yesterdayUnblockTotal);

@@ -1,4 +1,8 @@
 package ;
+import StringTools;
+import Std;
+import haxe.ds.StringMap;
+import haxe.web.Dispatch;
 import js.Lib;
 import js.html.Storage;
 import js.html.DOMWindow;
@@ -51,10 +55,8 @@ class Background
 	{
 		Note.log("tab_updated");
 		
-		// 裏で変更があった場合、タブイベントとstorageイベントは前後する可能性があるので、ロードを挟む
-		localStorageDetail.loadAllValue();
-		
 		var targetUrl:String = tab.url;
+		var targetUrlNoGet:String = targetUrl.split("?")[0];
 		// ブロックページのURlを取得
 		var blockUrl:String = Extension.getURL("block.html");
 		
@@ -63,7 +65,7 @@ class Background
 			Note.log("null除外");
 			return;
 		}
-		if (targetUrl == blockUrl){
+		if (targetUrlNoGet == blockUrl){
 			Note.log("ブロックページなので循環を防ぐために除外");
 			return;
 		}
@@ -76,6 +78,10 @@ class Background
 //			trace("テストページじゃない場合除外");	// 開発用にテストページに限定する
 //			return;
 //		}
+		
+		// 裏で変更があった場合、タブイベントとstorageイベントは前後する可能性があるので、ロードを挟む
+		localStorageDetail.loadAllValue();
+		
 		// リストをチェック
 		if (checkList(targetUrl, localStorageDetail.getWhitelist(), localStorageDetail.whitelistUseRegexp)){
 			if (!checkList(targetUrl, localStorageDetail.getBlacklist(), localStorageDetail.blacklistUseRegexp)) return;
@@ -86,6 +92,17 @@ class Background
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
 		Note.log("ブロック " + targetUrl);
 		localStorageDetail.setLastBlockPage(new Page(tab.title, targetUrl));
+		
+		// ブロックページの表示
+		var params:StringMap<String> = new StringMap<String>();
+		params.set("title", tab.title);
+		params.set("url", targetUrl);
+		var paramsStrings:Array<String> = [];
+		for(key in params.keys()){
+			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));
+		}
+		blockUrl += "?" + paramsStrings.join("&");
+		Note.debug(Std.string(blockUrl));
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	/*
