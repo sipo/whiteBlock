@@ -53,6 +53,8 @@ class Background
 	 */
 	private function tab_updatedHandler(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
+		Note.debug(changedInfo);
+		if (changedInfo.status != "complete") return;
 		Note.log("tab_updated");
 		
 		var targetUrl:String = tab.url;

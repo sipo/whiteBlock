@@ -31,6 +31,8 @@ Background.prototype = {
 		return false;
 	}
 	,tab_updatedHandler: function(tabId,changedInfo,tab) {
+		Note.debug(changedInfo);
+		if(changedInfo.status != "complete") return;
 		Note.log("tab_updated");
 		var targetUrl = tab.url;
 		var targetUrlNoGet = targetUrl.split("?")[0];

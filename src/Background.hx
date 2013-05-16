@@ -53,6 +53,7 @@ class Background
 	 */
 	private function tab_updatedHandler(tabId:Int, changedInfo:UpdateInfo, tab:Tab):Void
 	{
+		if (changedInfo.status != "complete") return;
 		Note.log("tab_updated");
 		
 		var targetUrl:String = tab.url;
@@ -90,7 +91,6 @@ class Background
 		if (localStorageDetail.checkUnblock()) return;
 		// ページをブロックする
 		// ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用
-		Note.log("ブロック " + targetUrl);
 		localStorageDetail.setLastBlockPage(new Page(tab.title, targetUrl));
 		
 		// ブロックページの表示
@@ -102,7 +102,8 @@ class Background
 			paramsStrings.push(key + "=" + StringTools.urlEncode(params.get(key)));
 		}
 		blockUrl += "?" + paramsStrings.join("&");
-		Note.debug(Std.string(blockUrl));
+		
+		Note.log("ブロック " + targetUrl);
 		Tabs.update(tabId, {url:blockUrl}, afterBlock);
 	}
 	/*
