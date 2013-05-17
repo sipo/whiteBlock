@@ -31,8 +31,12 @@ class StringUtil {
 		var seconds:Int = Std.int(time / 1000) % 60;
 		var minutes:Int = Std.int(time / 1000 / 60) % 60;
 		var hours:Int = Std.int(time / 1000 / 60 / 60);
+		if (9 < minutes){
+			return minutes + "\"";
+		}else{
+		}
 		var secondsZero:String = if (seconds < 10) "0" else "";
-		return minutes + ":" + secondsZero + seconds;
+		return minutes + "\"" + secondsZero + seconds;
 	}
 	
 	/** ドットの数 */

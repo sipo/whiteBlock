@@ -221,7 +221,6 @@ class LocalStorageDetail {
 				// 特殊なので値なし
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
-					5 * 1000,
 					3 * 60 * 1000,
 					5 * 60 * 1000,
 					10 * 60 * 1000,
@@ -237,7 +236,7 @@ class LocalStorageDetail {
 				whitelist = [
 					"https://www.google.co.jp/webhp",
 					"https://www.google.co.jp/search",
-					"https://www.google.co.jp/calendar",
+					"https://www.google.com/calendar",
 					"https://www.google.co.jp/map",
 					"https://drive.google.com",
 					"https://github.com",

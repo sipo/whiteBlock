@@ -421,8 +421,10 @@ common.StringUtil.timeDisplayMinutes = function(time) {
 	var seconds = (time / 1000 | 0) % 60;
 	var minutes = (time / 1000 / 60 | 0) % 60;
 	var hours = time / 1000 / 60 / 60 | 0;
+	if(9 < minutes) return minutes + "\""; else {
+	}
 	var secondsZero = seconds < 10?"0":"";
-	return minutes + ":" + secondsZero + seconds;
+	return minutes + "\"" + secondsZero + seconds;
 }
 common.StringUtil.limit = function(original,max) {
 	if(original.length <= max) return original;
@@ -1408,7 +1410,7 @@ storage.LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "unblockTimeList":
-			this.unblockTimeList = [5000,180000,300000,600000,1200000,1800000,3600000];
+			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
 			this.unblockTimeDefaultIndex = 2;
@@ -1417,7 +1419,7 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockState = storage.UnblockState.createDefault();
 			break;
 		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.co.jp/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
 			this.whitelistUseRegexp = false;
