@@ -237,7 +237,7 @@ class LocalStorageDetail {
 					"https://www.google.co.jp/webhp",
 					"https://www.google.co.jp/search",
 					"https://www.google.com/calendar",
-					"https://www.google.co.jp/map",
+					"https://maps.google.co.jp/",
 					"https://drive.google.com",
 					"https://github.com",
 					"http://www.alc.co.jp",

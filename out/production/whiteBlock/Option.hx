@@ -14,8 +14,6 @@ class Option {
 	/* view */
 	private var view:OptionView;
 	
-	private var isReady:Bool = false;
-	
 	/* ================================================================
 	 * 処理
 	 */
@@ -51,8 +49,6 @@ class Option {
 	private function document_readyHandler(event:JqEvent):Void
 	{
 		view.initialize();
-		view.drawUnblockState(true);
-		isReady = true;
 	}
 	
 	/*
@@ -60,24 +56,6 @@ class Option {
 	 */
 	private function storage_changeHandler(key:String):Void
 	{
-		if (!isReady) return;
-		Note.log("storage_changeHandler " + key);
-		switch(key){
-			case LocalStorageKey.VERSION:
-				// 特殊なので値なし
-			case LocalStorageKey.UNBLOCK_TIME_LIST:
-			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
-			case LocalStorageKey.UNBLOCK_STATE:
-				view.drawUnblockState(false);
-			case LocalStorageKey.WHITELIST:
-			case LocalStorageKey.WHITELIST_USE_REGEXP:
-			case LocalStorageKey.BLACKLIST:
-			case LocalStorageKey.BLACKLIST_USE_REGEXP:
-			case LocalStorageKey.LATER_LIST:
-				view.drawLaterList();
-			default :
-				throw "対応していない値です key=" + key;
-		}
 	}
 	
 	/*
@@ -85,8 +63,6 @@ class Option {
 	 */
 	private function window_timeoutHandler():Void
 	{
-		if (!isReady) return;
-		view.drawUnblockState(false);
 	}
 	
 	/* ================================================================

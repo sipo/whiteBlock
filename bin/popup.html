@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <script type="text/javascript" src="./jquery.js"></script>
-        <script type="text/javascript" src="./option.js"></script>
+        <script type="text/javascript" src="./popup.js"></script>
         <link href="popup.css" rel="stylesheet" type="text/css" />
     </head>
     <body>
@@ -22,6 +22,14 @@
                 <a href="#" id="endUnblock">ブロック解除を終了する</a>
             </div>
         </section>
+        <hr />
+        <section id="laterListSection">
+            <h1>あとで見るリスト</h1>
+            <ul id="laterList">
+                <li class="laterUrl"><a href="::url::" class="laterUrlLink">::titleAndUrl::</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
+            </ul>
+        </section>
+        <hr />
         <p><a href="option.html" target="_blank">オプションを開く</a></p>
     </body>
 </html>

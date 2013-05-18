@@ -144,4 +144,11 @@ class Background
 //		Tabs.sendMessage(tab.id, {}, blockCallback);
 	}
 	
+	/**
+	 * バッチの描画
+	 */
+	public function batchDraw():Void
+	{
+		
+	}
 }

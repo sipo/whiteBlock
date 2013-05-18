@@ -120,7 +120,6 @@ Note.prototype = {
 	__class__: Note
 }
 var Option = function() {
-	this.isReady = false;
 	var factory = new storage.LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	this.view = new OptionView(this,this.localStorageDetail);
@@ -136,41 +135,11 @@ Option.prototype = {
 		this.localStorageDetail.startUnblock(unblockTime);
 	}
 	,window_timeoutHandler: function() {
-		if(!this.isReady) return;
-		this.view.drawUnblockState(false);
 	}
 	,storage_changeHandler: function(key) {
-		if(!this.isReady) return;
-		Note.log("storage_changeHandler " + key);
-		switch(key) {
-		case "version":
-			break;
-		case "unblockTimeList":
-			break;
-		case "unblockTimeDefaultIndex":
-			break;
-		case "unblockState":
-			this.view.drawUnblockState(false);
-			break;
-		case "whitelist":
-			break;
-		case "whitelistUseRegexp":
-			break;
-		case "blacklist":
-			break;
-		case "blacklistUseRegexp":
-			break;
-		case "laterList":
-			this.view.drawLaterList();
-			break;
-		default:
-			throw "対応していない値です key=" + key;
-		}
 	}
 	,document_readyHandler: function(event) {
 		this.view.initialize();
-		this.view.drawUnblockState(true);
-		this.isReady = true;
 	}
 	,__class__: Option
 }
@@ -188,64 +157,13 @@ OptionView.prototype = {
 	,unblockTimeList_changeHandler: function(event) {
 		Note.log("unblockTimeList_changeHandler");
 	}
-	,laterUrlDelete_clickHandler: function(event,index) {
-		Note.log("laterUrlDelete_clickHandler " + index);
-	}
-	,laterUrlLink_clickHandler: function(event,index) {
-		Note.log("laterUrlLink_clickHandler " + index);
-	}
-	,endUnblock_clickHandler: function(event) {
-		Note.log("endUnblock_clickHandler");
-	}
-	,unblock_clickHandler: function(event) {
-		Note.log("unblock_clickHandler");
-		this.option.startUnblock(this.unblockTime.getValue());
-	}
 	,drawUnblockTimeDefault: function() {
 	}
 	,drawConfig: function() {
 		this.drawUnblockTimeDefault();
 	}
-	,drawLaterList: function() {
-	}
-	,drawUnblockState: function(isFirst) {
-		Note.log("drawUnblockState");
-		this.localStorageDetail.checkUnblock();
-		var unblockState = this.localStorageDetail.getUnblockState();
-		var unblockTimeList = this.localStorageDetail.getUnblockTimeList();
-		var date = new Date();
-		var full = isFirst || this.lastDisplayIsUnblock != unblockState.isUnblock;
-		this.lastDisplayIsUnblock = unblockState.isUnblock;
-		if(!this.lastDisplayIsUnblock) {
-			if(full) {
-				this.blockDisplay_switch.show();
-				this.unblockDisplay_switch.hide();
-			}
-			if(unblockState.switchTime == -1) this.blockTime_text.html("--- "); else {
-				var time = date.getTime() - unblockState.switchTime;
-				this.blockTime_text.html(common.StringUtil.timeDisplay(time,true));
-			}
-			if(full) this.unblockTime.draw(unblockTimeList,this.localStorageDetail.unblockTimeDefaultIndex);
-		} else {
-			if(full) {
-				this.blockDisplay_switch.hide();
-				this.unblockDisplay_switch.show();
-			}
-			var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			this.unblockTimeLeft_text.html(common.StringUtil.timeDisplay(time,true));
-		}
-	}
 	,initialize: function() {
 		console.log("optionView initialize");
-		this.blockDisplay_switch = new js.JQuery("#blockDisplay");
-		this.blockTime_text = new js.JQuery("#blockTime");
-		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
-		this.unblock_clickable = new js.JQuery("#unblock");
-		this.unblockDisplay_switch = new js.JQuery("#unblockDisplay");
-		this.unblockTimeLeft_text = new js.JQuery("#unblockTimeLeft");
-		this.endUnblock_clickable = new js.JQuery("#endUnblock");
-		this.laterList_container = new js.JQuery("#laterList");
-		this.laterKits = [];
 		this.unblockTimeList_textArea = new js.JQuery("#unblockTimeList");
 		this.unblockTimeDefaultIndex = new common.UnblockTimeDownList(new js.JQuery("#unblockTimeDefaultIndex"));
 		this.whitelist_textArea = new js.JQuery("#whitelist");
@@ -253,10 +171,6 @@ OptionView.prototype = {
 		this.blacklist_textArea = new js.JQuery("#blacklist");
 		this.blacklistUseRegexp_checkbox = new js.JQuery("#blacklistUseRegexp");
 		this.save_clickable = new js.JQuery("#save");
-		this.laterKitBase = new haxe.Template(this.laterList_container.html());
-		this.laterList_container.html("");
-		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
-		this.endUnblock_clickable.click($bind(this,this.endUnblock_clickHandler));
 	}
 	,__class__: OptionView
 }
@@ -1419,7 +1333,7 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockState = storage.UnblockState.createDefault();
 			break;
 		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://www.google.co.jp/map","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
 			this.whitelistUseRegexp = false;

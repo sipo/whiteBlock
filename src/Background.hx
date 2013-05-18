@@ -149,6 +149,6 @@ class Background
 	 */
 	public function batchDraw():Void
 	{
-		kokokara
+		
 	}
 }
