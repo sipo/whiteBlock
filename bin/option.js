@@ -164,7 +164,10 @@ OptionView.prototype = {
 		this.anyChange = isChange;
 		if(isChange) this.save_clickable.removeAttr("disabled"); else this.save_clickable.attr("disabled","disabled");
 	}
-	,body_unloadHandler: function(event) {
+	,window_unloadHandler: function(event) {
+		if(!this.anyChange) return;
+		event.returnValue = "ページから移動しますか？";
+		return event;
 	}
 	,checkboxToBool: function(checkbox) {
 		return checkbox["is"](":" + "checked");
@@ -266,13 +269,17 @@ OptionView.prototype = {
 		this.blacklist_textArea = new js.JQuery("#blacklist");
 		this.blacklistUseRegexp_checkbox = new js.JQuery("#blacklistUseRegexp");
 		this.save_clickable = new js.JQuery("#save");
+		this.unblockTimeList_textArea.keyup($bind(this,this.unblockTimeList_changeHandler));
 		this.unblockTimeList_textArea.change($bind(this,this.unblockTimeList_changeHandler));
 		this.unblockTimeDefaultIndex.change($bind(this,this.unblockTimeDefaultIndex_changeHandler));
+		this.whitelist_textArea.keyup($bind(this,this.any_changeHandler));
 		this.whitelist_textArea.change($bind(this,this.any_changeHandler));
 		this.whitelistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
+		this.blacklist_textArea.keyup($bind(this,this.any_changeHandler));
 		this.blacklist_textArea.change($bind(this,this.any_changeHandler));
 		this.blacklistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
 		this.save_clickable.click($bind(this,this.save_clickHandler));
+		var body = js.Boot.__cast(new js.JQuery("body").get()[0] , HTMLBodyElement);
 		this.drawConfig();
 		this.switchChange(false);
 	}
@@ -1303,6 +1310,9 @@ js.Boot.__instanceof = function(o,cl) {
 		if(cl == Enum && o.__ename__ != null) return true; else null;
 		return o.__enum__ == cl;
 	}
+}
+js.Boot.__cast = function(o,t) {
+	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
 }
 js.Browser = function() { }
 js.Browser.__name__ = true;

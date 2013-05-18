@@ -1,4 +1,9 @@
 package ;
+import js.html.Element;
+import js.html.BodyElement;
+import js.html.DOMWindow;
+import js.html.Event;
+import js.Browser;
 import Option.StorageSaveData;
 import storage.UnblockState;
 import storage.LocalStorageDetail;
@@ -72,13 +77,19 @@ class OptionView {
 		save_clickable = new JQuery("#save");
 		
 		// イベント
+		unblockTimeList_textArea.keyup(unblockTimeList_changeHandler);	// inputイベントとか無いのー？
 		unblockTimeList_textArea.change(unblockTimeList_changeHandler);
 		unblockTimeDefaultIndex.change(unblockTimeDefaultIndex_changeHandler);
+		whitelist_textArea.keyup(any_changeHandler);
 		whitelist_textArea.change(any_changeHandler);
 		whitelistUseRegexp_checkbox.change(any_changeHandler);
+		blacklist_textArea.keyup(any_changeHandler);
 		blacklist_textArea.change(any_changeHandler);
 		blacklistUseRegexp_checkbox.change(any_changeHandler);
 		save_clickable.click(save_clickHandler);
+		
+		var body:BodyElement = cast(new JQuery("body").get()[0], BodyElement);
+//		body.onunload = window_unloadHandler;	// うーん、動かない・・・まあいいか
 		
 		drawConfig();
 		switchChange(false);
@@ -180,6 +191,7 @@ class OptionView {
 		any_changeHandler(null);
 	}
 	
+	
 	/*
 	 * 何らかデータの変更
 	 */
@@ -237,11 +249,13 @@ class OptionView {
 	
 	/*
 	 * 画面のアンロード時の処理
-	 * 変更があったら注意する
+	 * 変更があったら注意する　※なんか動かん！
 	 */
-	private function body_unloadHandler(event:JqEvent):Void
+	private function window_unloadHandler(event:Event):Void
 	{
-		// 
+		if (!anyChange) return;
+		untyped event.returnValue = 'ページから移動しますか？';
+		untyped return event;
 	}
 	
 	/* ================================================================
