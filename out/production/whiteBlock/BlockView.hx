@@ -1,4 +1,6 @@
 package ;
+import haxe.rtti.CType.Typedef;
+import js.Browser;
 import StringTools;
 import storage.UnblockState;
 import common.Page;
@@ -36,6 +38,8 @@ class BlockView {
 	
 	private var addLaterList_clickable:JQuery;	// あとで見る追加ボタン
 	private var addLaterListComplete_switch:JQuery;
+//	private var addLaterListClose_clickable:JQuery;
+	
 	
 	private var unblock_clickable:JQuery;         // ブロック解除開始リンク
 	private var unblockTime:UnblockTimeDownList;     // ブロック解除する時間
@@ -77,6 +81,7 @@ class BlockView {
 		
 		addLaterList_clickable = new JQuery("#addLaterList");
 		addLaterListComplete_switch = new JQuery("#addLaterListComplete");
+//		addLaterListClose_clickable = new JQuery("#addLaterListClose");
 		
 		unblock_clickable = new JQuery("#unblock");
 		blockTime_container = new JQuery("#blockTime");
@@ -96,6 +101,7 @@ class BlockView {
 		
 		// イベントの登録
 		addLaterList_clickable.click(addLaterList_clickHandler);
+//		addLaterListClose_clickable.click(addLaterListClose_clickHandler);
 		unblock_clickable.click(unblock_clickHandler);
 		addWhiteList_clickable.click(addWhiteList_clickHandler);
 	}
@@ -142,7 +148,7 @@ class BlockView {
 	 * イベント
 	 */
 	
-	/**
+	/*
 	 * あとでリスト追加をクリック
 	 */
 	private function addLaterList_clickHandler(event:JqEvent):Void
@@ -152,6 +158,17 @@ class BlockView {
 		addLaterListComplete_switch.show();
 		addLaterList_clickable.hide();
 	}
+	
+//	/*
+//	 * あとでリスト追加後にページを閉じる
+//	 */
+//	private function addLaterListClose_clickHandler(event:JqEvent):Void
+//	{
+//		Note.log("addLaterListClose_clickHandler");
+//		untyped window.close();
+//	}
+	
+	
 	
 	/*
 	 * ブロック解除をクリック
