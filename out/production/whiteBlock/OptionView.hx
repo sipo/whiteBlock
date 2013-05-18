@@ -88,7 +88,12 @@ class OptionView {
 		blacklistUseRegexp_checkbox.change(any_changeHandler);
 		save_clickable.click(save_clickHandler);
 		
-		var body:BodyElement = cast(new JQuery("body").get()[0], BodyElement);
+//		var body:BodyElement = cast(new JQuery("body").get()[0], BodyElement);
+//		body.onbeforeunload = window_unloadHandler;
+		trace(window_unloadHandler);
+		trace(anyChange);
+		untyped __js__("window.onbeforeunload = this.window_unloadHandler"); 
+		
 //		body.onunload = window_unloadHandler;	// うーん、動かない・・・まあいいか
 		
 		drawConfig();
@@ -254,8 +259,8 @@ class OptionView {
 	private function window_unloadHandler(event:Event):Void
 	{
 		if (!anyChange) return;
-		untyped event.returnValue = 'ページから移動しますか？';
-		untyped return event;
+		untyped __js__("event.returnValue = 'ページから移動しますか？'");
+		untyped __js__("return event");
 	}
 	
 	/* ================================================================

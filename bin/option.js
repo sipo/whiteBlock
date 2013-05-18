@@ -154,7 +154,7 @@ OptionView.prototype = {
 	}
 	,window_unloadHandler: function(event) {
 		if(!this.anyChange) return;
-		event.returnValue = "ページから移動しますか？";
+		event.returnValue = 'ページから移動しますか？';
 		return event;
 	}
 	,checkboxToBool: function(checkbox) {
@@ -267,7 +267,9 @@ OptionView.prototype = {
 		this.blacklist_textArea.change($bind(this,this.any_changeHandler));
 		this.blacklistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
 		this.save_clickable.click($bind(this,this.save_clickHandler));
-		var body = js.Boot.__cast(new js.JQuery("body").get()[0] , HTMLBodyElement);
+		console.log($bind(this,this.window_unloadHandler));
+		console.log(this.anyChange);
+		window.onbeforeunload = this.window_unloadHandler;
 		this.drawConfig();
 		this.switchChange(false);
 	}
@@ -1310,9 +1312,6 @@ js.Boot.__instanceof = function(o,cl) {
 		if(cl == Enum && o.__ename__ != null) return true; else null;
 		return o.__enum__ == cl;
 	}
-}
-js.Boot.__cast = function(o,t) {
-	if(js.Boot.__instanceof(o,t)) return o; else throw "Cannot cast " + Std.string(o) + " to " + Std.string(t);
 }
 js.Browser = function() { }
 js.Browser.__name__ = true;
