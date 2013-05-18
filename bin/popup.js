@@ -1312,7 +1312,6 @@ storage.LocalStorageDetail.prototype = {
 		return ans;
 	}
 	,checkUnblock: function() {
-		console.log("checkUnblock");
 		if(!this.unblockState.isUnblock) return false;
 		var date = new Date();
 		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;

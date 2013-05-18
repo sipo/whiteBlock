@@ -43,7 +43,10 @@ class Background
 	{
 		var factory:LocalStorageFactory = new LocalStorageFactory();
 		localStorageDetail = factory.create(storage_changeHandler, DEBUG_CLEAR_DATA);
+		// タブの変更イベント
 		Tabs.onUpdated.addListener(tab_updatedHandler);
+		// 繰り返し処理イベント登録
+		Browser.window.setInterval(window_timeoutHandler, 1000);
 	}
 	
 	/*
@@ -52,6 +55,18 @@ class Background
 	private function storage_changeHandler(key:String):Void
 	{
 		// 特になし
+	}
+	
+	/*
+	 * 毎フレーム
+	 */
+	private function window_timeoutHandler():Void
+	{
+		if (localStorageDetail.checkUnblock()){
+			batchDraw();
+			return;
+		}
+		batchClear();
 	}
 	
 	/*
@@ -91,13 +106,10 @@ class Background
 		}
 		// ブロック解除中ならブロックしない
 		if (localStorageDetail.checkUnblock()){
-			var date:Date = Date.now();
-			var unblockState:UnblockState = localStorageDetail.getUnblockState();
-			var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			BrowserAction.setBadgeText({text:StringUtil.timeDisplayMinutes(time)});
+			batchDraw();
 			return;
 		}
-		BrowserAction.setBadgeText({text:""});
+		batchClear();
 		// ページをブロックする（ブロックするにはコンテンツスクリプトを利用する方法があるが、HTMLに既にあるスクリプトの競合がどうなるか分からなくて、こちらを利用）
 		
 		// ブロックページの準備
@@ -149,6 +161,13 @@ class Background
 	 */
 	public function batchDraw():Void
 	{
-		
+		var date:Date = Date.now();
+		var unblockState:UnblockState = localStorageDetail.getUnblockState();
+		var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
+		BrowserAction.setBadgeText({text:StringUtil.timeDisplayMinutes(time)});
+	}
+	public function batchClear():Void
+	{
+		BrowserAction.setBadgeText({text:""});
 	}
 }

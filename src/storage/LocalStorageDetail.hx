@@ -361,7 +361,6 @@ class LocalStorageDetail {
 	 */
 	public function checkUnblock():Bool
 	{
-		trace("checkUnblock");
 		if (!unblockState.isUnblock) return false;
 		var date:Date = Date.now();
 		var endTime:Float = unblockState.switchTime + unblockState.unblockTime;

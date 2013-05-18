@@ -3,13 +3,21 @@ var Background = $hxClasses["Background"] = function() {
 	var factory = new storage.LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),true);
 	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updatedHandler));
+	js.Browser.window.setInterval($bind(this,this.window_timeoutHandler),1000);
 };
 Background.__name__ = true;
 Background.main = function() {
 	Background.background = new Background();
 }
 Background.prototype = {
-	batchDraw: function() {
+	batchClear: function() {
+		chrome.browserAction.setBadgeText({ text : ""});
+	}
+	,batchDraw: function() {
+		var date = new Date();
+		var unblockState = this.localStorageDetail.getUnblockState();
+		var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
+		chrome.browserAction.setBadgeText({ text : common.StringUtil.timeDisplayMinutes(time)});
 	}
 	,afterBlock: function(tab) {
 		console.log("afterBlock");
@@ -56,13 +64,10 @@ Background.prototype = {
 			if(!this.checkList(targetUrl,this.localStorageDetail.getBlacklist(),this.localStorageDetail.blacklistUseRegexp)) return;
 		}
 		if(this.localStorageDetail.checkUnblock()) {
-			var date = new Date();
-			var unblockState = this.localStorageDetail.getUnblockState();
-			var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
-			chrome.browserAction.setBadgeText({ text : common.StringUtil.timeDisplayMinutes(time)});
+			this.batchDraw();
 			return;
 		}
-		chrome.browserAction.setBadgeText({ text : ""});
+		this.batchClear();
 		var params = new haxe.ds.StringMap();
 		params.set("title",tab.title);
 		params.set("url",targetUrl);
@@ -75,6 +80,13 @@ Background.prototype = {
 		blockUrl += "?" + paramsStrings.join("&");
 		Note.log("ブロック " + targetUrl);
 		chrome.tabs.update(tabId,{ url : blockUrl},$bind(this,this.afterBlock));
+	}
+	,window_timeoutHandler: function() {
+		if(this.localStorageDetail.checkUnblock()) {
+			this.batchDraw();
+			return;
+		}
+		this.batchClear();
 	}
 	,storage_changeHandler: function(key) {
 	}
@@ -873,7 +885,6 @@ storage.LocalStorageDetail.prototype = {
 		return ans;
 	}
 	,checkUnblock: function() {
-		console.log("checkUnblock");
 		if(!this.unblockState.isUnblock) return false;
 		var date = new Date();
 		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;
