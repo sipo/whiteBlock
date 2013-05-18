@@ -14,8 +14,8 @@
                 <p>
                     <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
                     <a href="#" id="unblock">少しだけブロックを解除する</a>
-                    <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
                 </p>
+                <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
             </div>
             <div id="unblockDisplay">
                 <p>現在ブロックが解除されています</p>
@@ -26,11 +26,15 @@
         <hr />
         <section id="laterListSection">
             <h1>あとで見るリスト</h1>
+            <p id="laterListBlockMessage">あとで見るリストは、ブロックを解除してから見ることができます。</p>
             <ul id="laterList">
-                <li class="laterUrl"><a href="::url::" class="laterUrlLink">::titleAndUrl::</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
+                <li class="laterKit"><a href="::urlFull::" class="linkLaterUrl" target="_blank">::title::(::urlShort::)</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
             </ul>
         </section>
         <hr />
         <p><a href="option.html" target="_blank">オプションを開く</a></p>
+        <p>ツイッター投稿機能とかここに入れたい</p>
+        <p id="totalDisplay">::if (isYesterdayData)::昨日は::yesterdayBlockTotal::、::else::::end::今日は::todayBlockTotal::、Chromeをブロックしています</p>
+        
     </body>
 </html>

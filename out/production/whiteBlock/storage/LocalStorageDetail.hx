@@ -110,9 +110,9 @@ class LocalStorageDetail {
 		laterList.push(value);	// 追加
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
 	}
-	public function removeLaterList(value:Page):Void
+	public function removeLaterList(index:Int):Void
 	{
-		laterList.remove(value);	// 削除
+		laterList.splice(index, 1);	// 削除
 		flushItem(LocalStorageKey.LATER_LIST);	// Storageへ反映
 	}
 	
@@ -234,7 +234,7 @@ class LocalStorageDetail {
 					60 * 60 * 1000
 				];
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
-				unblockTimeDefaultValue = unblockTimeList[0];
+				unblockTimeDefaultValue = unblockTimeList[1];
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createDefault();
 			case LocalStorageKey.WHITELIST:
@@ -429,7 +429,7 @@ class LocalStorageDetail {
 				ans.yesterday = unblockState.yesterdayUnblockTotal;
 			}else{
 				// 日付またぎありyear : Int, month : Int, day : Int, hour : Int, min : Int, sec : Int
-				var today0HourTime:Float = new Date(date.getFullYear(), date.getMonth(), date.getDay(), 0, 0, 0).getTime();
+				var today0HourTime:Float = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0).getTime();
 				ans.yesterday = unblockState.todayUnblockTotal + today0HourTime - unblockState.switchTime;
 				ans.today = date.getTime() - today0HourTime;
 			}

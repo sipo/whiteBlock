@@ -52,6 +52,8 @@ class Popup {
 	{
 		view.initialize();
 		view.drawUnblockState(true);
+		view.drawLaterList();
+		view.drawTotal();
 		isReady = true;
 	}
 	
@@ -69,6 +71,7 @@ class Popup {
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
 			case LocalStorageKey.UNBLOCK_STATE:
 				view.drawUnblockState(false);
+				view.drawLaterList();
 			case LocalStorageKey.WHITELIST:
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
 			case LocalStorageKey.BLACKLIST:
@@ -102,10 +105,26 @@ class Popup {
 	}
 	
 	/**
-	 * ブロック解除開始
+	 * ブロック解除終了
 	 */
 	public function endUnblock():Void
 	{
 		localStorageDetail.endUnblock();
+	}
+	
+	/**
+	 * あとでみるクリック
+	 */
+	public function openLater(index:Int):Void
+	{
+		localStorageDetail.removeLaterList(index);
+	}
+	
+	/**
+	 * ブロック解除開始
+	 */
+	public function deleteLater(index:Int):Void
+	{
+		localStorageDetail.removeLaterList(index);
 	}
 }

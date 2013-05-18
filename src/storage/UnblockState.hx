@@ -31,7 +31,7 @@ class UnblockState
 	{
 		isUnblock = false;
 		todayUnblockTotal = 0;
-		yesterdayUnblockTotal = 0;
+		yesterdayUnblockTotal = -1;
 		switchTime = Date.now().getTime();
 		unblockTime = 0;
 	}

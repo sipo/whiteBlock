@@ -4,7 +4,7 @@ var Block = $hxClasses["Block"] = function() {
 	var factory = new storage.LocalStorageFactory();
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	var params = haxe.web.Request.getParams();
-	this.lastBlockPage = new common.Page(StringTools.urlDecode(params.get("title")),StringTools.urlDecode(params.get("url")));
+	this.targetPage = new common.Page(StringTools.urlDecode(params.get("title")),StringTools.urlDecode(params.get("url")));
 	this.view = new BlockView(this,this.localStorageDetail);
 	new js.JQuery("document").ready($bind(this,this.document_readyHandler));
 };
@@ -15,14 +15,14 @@ Block.main = function() {
 Block.prototype = {
 	addWhiteList: function(url) {
 		this.localStorageDetail.addWhitelist(url);
-		js.Browser.window.location.assign(this.lastBlockPage.url);
+		js.Browser.window.history.go(-2);
 	}
 	,startUnblock: function(unblockTime) {
 		this.localStorageDetail.startUnblock(unblockTime);
-		js.Browser.window.location.assign(this.lastBlockPage.url);
+		js.Browser.window.history.go(-2);
 	}
 	,addLaterList: function() {
-		this.localStorageDetail.addLaterList(this.lastBlockPage.clone());
+		this.localStorageDetail.addLaterList(this.targetPage.clone());
 	}
 	,storage_changeHandler: function(key) {
 		if(!this.isReady) return;
@@ -33,7 +33,7 @@ Block.prototype = {
 		this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 		this.isReady = true;
 		this.view.initialize();
-		this.view.draw(this.lastBlockPage);
+		this.view.draw(this.targetPage);
 	}
 	,__class__: Block
 }
@@ -52,6 +52,8 @@ BlockView.prototype = {
 		this.block.startUnblock(this.unblockTime.getValue());
 	}
 	,addLaterList_clickHandler: function(event) {
+		Note.log("addLaterList_clickHandler");
+		this.block.addLaterList();
 	}
 	,draw: function(targetPage) {
 		Note.log("draw");
@@ -141,18 +143,6 @@ HxOverrides.substr = function(s,pos,len) {
 		if(pos < 0) pos = 0;
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
-}
-HxOverrides.remove = function(a,obj) {
-	var i = 0;
-	var l = a.length;
-	while(i < l) {
-		if(a[i] == obj) {
-			a.splice(i,1);
-			return true;
-		}
-		i++;
-	}
-	return false;
 }
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
@@ -1316,7 +1306,7 @@ storage.LocalStorageDetail.prototype = {
 				ans.today = this.unblockState.todayUnblockTotal + nowUnblockTimeTotal;
 				ans.yesterday = this.unblockState.yesterdayUnblockTotal;
 			} else {
-				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDay(),0,0,0).getTime();
+				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDate(),0,0,0).getTime();
 				ans.yesterday = this.unblockState.todayUnblockTotal + today0HourTime - this.unblockState.switchTime;
 				ans.today = date.getTime() - today0HourTime;
 			}
@@ -1420,7 +1410,7 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockTimeList = [60000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultValue = this.unblockTimeList[0];
+			this.unblockTimeDefaultValue = this.unblockTimeList[1];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
@@ -1550,8 +1540,8 @@ storage.LocalStorageDetail.prototype = {
 		}
 		this.window_storageHandler_(key);
 	}
-	,removeLaterList: function(value) {
-		HxOverrides.remove(this.laterList,value);
+	,removeLaterList: function(index) {
+		this.laterList.splice(index,1);
 		this.flushItem("laterList");
 	}
 	,addLaterList: function(value) {
@@ -1645,7 +1635,7 @@ storage.LocalStorageKey.KEY_LIST = function() {
 storage.UnblockState = $hxClasses["storage.UnblockState"] = function() {
 	this.isUnblock = false;
 	this.todayUnblockTotal = 0;
-	this.yesterdayUnblockTotal = 0;
+	this.yesterdayUnblockTotal = -1;
 	this.switchTime = new Date().getTime();
 	this.unblockTime = 0;
 };
@@ -1678,12 +1668,6 @@ storage.UnblockState.prototype = {
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
-if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
-	var i = a.indexOf(o);
-	if(i == -1) return false;
-	a.splice(i,1);
-	return true;
-}; else null;
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -1712,6 +1696,7 @@ var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
+Block.HISTORY_BACK_NUM = -2;
 BlockView.ADD_WHITELIST_TEXT_MAX_SIZE = 100;
 BlockView.URL_LIMIT = 100;
 BlockView.TITLE_LIMIT = 100;

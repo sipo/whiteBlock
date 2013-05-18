@@ -45,18 +45,6 @@ HxOverrides.substr = function(s,pos,len) {
 	} else if(len < 0) len = s.length + len - pos;
 	return s.substr(pos,len);
 }
-HxOverrides.remove = function(a,obj) {
-	var i = 0;
-	var l = a.length;
-	while(i < l) {
-		if(a[i] == obj) {
-			a.splice(i,1);
-			return true;
-		}
-		i++;
-	}
-	return false;
-}
 HxOverrides.iter = function(a) {
 	return { cur : 0, arr : a, hasNext : function() {
 		return this.cur < this.arr.length;
@@ -132,7 +120,13 @@ Popup.main = function() {
 	Popup.popup = new Popup();
 }
 Popup.prototype = {
-	endUnblock: function() {
+	deleteLater: function(index) {
+		this.localStorageDetail.removeLaterList(index);
+	}
+	,openLater: function(index) {
+		this.localStorageDetail.removeLaterList(index);
+	}
+	,endUnblock: function() {
 		this.localStorageDetail.endUnblock();
 	}
 	,startUnblock: function(unblockTime) {
@@ -154,6 +148,7 @@ Popup.prototype = {
 			break;
 		case "unblockState":
 			this.view.drawUnblockState(false);
+			this.view.drawLaterList();
 			break;
 		case "whitelist":
 			break;
@@ -173,6 +168,8 @@ Popup.prototype = {
 	,document_readyHandler: function(event) {
 		this.view.initialize();
 		this.view.drawUnblockState(true);
+		this.view.drawLaterList();
+		this.view.drawTotal();
 		this.isReady = true;
 	}
 	,__class__: Popup
@@ -185,9 +182,11 @@ PopupView.__name__ = true;
 PopupView.prototype = {
 	laterUrlDelete_clickHandler: function(event,index) {
 		Note.log("laterUrlDelete_clickHandler " + index);
+		this.popup.deleteLater(index);
 	}
 	,laterUrlLink_clickHandler: function(event,index) {
 		Note.log("laterUrlLink_clickHandler " + index);
+		this.popup.openLater(index);
 	}
 	,endUnblock_clickHandler: function(event) {
 		Note.log("endUnblock_clickHandler");
@@ -197,7 +196,46 @@ PopupView.prototype = {
 		Note.log("unblock_clickHandler");
 		this.popup.startUnblock(this.unblockTime.getValue());
 	}
+	,drawTotal: function() {
+		Note.log("drawTotal");
+		var unblockState = this.localStorageDetail.getUnblockState();
+		var date = new Date();
+		var yesterdayBlockTotalTime = 86400000 - unblockState.yesterdayUnblockTotal;
+		var today0 = new Date(date.getFullYear(),date.getMonth(),date.getDate(),0,0,0);
+		var todayBlockTotalTime = date.getTime() - today0.getTime() - unblockState.todayUnblockTotal;
+		var totalDisplayContext = { isYesterdayData : unblockState.yesterdayUnblockTotal != -1, yesterdayBlockTotal : common.StringUtil.timeDisplay(yesterdayBlockTotalTime,false), todayBlockTotal : common.StringUtil.timeDisplay(todayBlockTotalTime,false)};
+		this.totalDisplay_container.html(this.totalDisplayBase.execute(totalDisplayContext));
+	}
 	,drawLaterList: function() {
+		var _g2 = this;
+		Note.log("drawLaterList");
+		this.laterList_container.html("");
+		if(!this.localStorageDetail.getUnblockState().isUnblock) {
+			this.laterListBlockMessage_switch.show();
+			return;
+		} else this.laterListBlockMessage_switch.hide();
+		var laterList = this.localStorageDetail.getLaterList();
+		Note.log("laterList = " + Std.string(laterList));
+		var _g1 = 0, _g = laterList.length;
+		while(_g1 < _g) {
+			var i = [_g1++];
+			var page = laterList[i[0]];
+			var laterKitContext = { urlFull : page.url, urlShort : common.StringUtil.limit(page.url,50), title : common.StringUtil.limit(page.title,50)};
+			this.laterList_container.append(this.laterKitBase.execute(laterKitContext));
+			var laterKit_container = this.laterList_container.children(".laterKit").eq(i[0]);
+			var laterKit_linkLaterUrl_clickable = laterKit_container.children(".linkLaterUrl");
+			var laterKit_deleteLaterUrl_clickable = laterKit_container.children(".deleteLaterUrl");
+			laterKit_linkLaterUrl_clickable.click((function(i) {
+				return function(event) {
+					_g2.laterUrlLink_clickHandler(event,i[0]);
+				};
+			})(i));
+			laterKit_deleteLaterUrl_clickable.click((function(i) {
+				return function(event) {
+					_g2.laterUrlDelete_clickHandler(event,i[0]);
+				};
+			})(i));
+		}
 	}
 	,drawUnblockState: function(isFirst) {
 		Note.log("drawUnblockState");
@@ -238,12 +276,16 @@ PopupView.prototype = {
 		this.unblockDisplay_switch = new js.JQuery("#unblockDisplay");
 		this.unblockTimeLeft_text = new js.JQuery("#unblockTimeLeft");
 		this.endUnblock_clickable = new js.JQuery("#endUnblock");
+		this.laterListBlockMessage_switch = new js.JQuery("#laterListBlockMessage");
 		this.laterList_container = new js.JQuery("#laterList");
 		this.laterKits = [];
+		this.totalDisplay_container = new js.JQuery("#totalDisplay");
 		this.todayUnblockTotalBase = new haxe.Template(this.todayUnblockTotal_container.html());
 		this.todayUnblockTotal_container.html("");
 		this.laterKitBase = new haxe.Template(this.laterList_container.html());
 		this.laterList_container.html("");
+		this.totalDisplayBase = new haxe.Template(this.totalDisplay_container.html());
+		this.totalDisplay_container.html("");
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
 		this.endUnblock_clickable.click($bind(this,this.endUnblock_clickHandler));
 	}
@@ -1310,7 +1352,7 @@ storage.LocalStorageDetail.prototype = {
 				ans.today = this.unblockState.todayUnblockTotal + nowUnblockTimeTotal;
 				ans.yesterday = this.unblockState.yesterdayUnblockTotal;
 			} else {
-				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDay(),0,0,0).getTime();
+				var today0HourTime = new Date(date.getFullYear(),date.getMonth(),date.getDate(),0,0,0).getTime();
 				ans.yesterday = this.unblockState.todayUnblockTotal + today0HourTime - this.unblockState.switchTime;
 				ans.today = date.getTime() - today0HourTime;
 			}
@@ -1414,7 +1456,7 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockTimeList = [60000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultValue = this.unblockTimeList[0];
+			this.unblockTimeDefaultValue = this.unblockTimeList[1];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
@@ -1544,8 +1586,8 @@ storage.LocalStorageDetail.prototype = {
 		}
 		this.window_storageHandler_(key);
 	}
-	,removeLaterList: function(value) {
-		HxOverrides.remove(this.laterList,value);
+	,removeLaterList: function(index) {
+		this.laterList.splice(index,1);
 		this.flushItem("laterList");
 	}
 	,addLaterList: function(value) {
@@ -1639,7 +1681,7 @@ storage.LocalStorageKey.KEY_LIST = function() {
 storage.UnblockState = function() {
 	this.isUnblock = false;
 	this.todayUnblockTotal = 0;
-	this.yesterdayUnblockTotal = 0;
+	this.yesterdayUnblockTotal = -1;
 	this.switchTime = new Date().getTime();
 	this.unblockTime = 0;
 };
@@ -1672,12 +1714,6 @@ storage.UnblockState.prototype = {
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
 var $_;
 function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
-if(Array.prototype.indexOf) HxOverrides.remove = function(a,o) {
-	var i = a.indexOf(o);
-	if(i == -1) return false;
-	a.splice(i,1);
-	return true;
-}; else null;
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -1705,6 +1741,8 @@ var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
+PopupView.URL_LIMIT = 50;
+PopupView.TITLE_LIMIT = 50;
 common.StringUtil.DOT_NUM = 3;
 common.StringUtil.DOTS = "...";
 haxe.Template.splitter = new EReg("(::[A-Za-z0-9_ ()&|!+=/><*.\"-]+::|\\$\\$([A-Za-z0-9_-]+)\\()","");

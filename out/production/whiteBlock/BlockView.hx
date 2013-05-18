@@ -136,7 +136,8 @@ class BlockView {
 	 */
 	private function addLaterList_clickHandler(event:JqEvent):Void
 	{
-		
+		Note.log("addLaterList_clickHandler");
+		block.addLaterList();
 	}
 	
 	/*

@@ -1,4 +1,5 @@
 package ;
+import js.html.History;
 import common.RequestParams;
 import common.Page;
 import storage.LocalStorageFactory;
@@ -20,12 +21,13 @@ class Block
 	private var localStorageDetail:LocalStorageDetail;
 	/* dom準備完了 */
 	private var isReady:Bool = false;
-	/* 最後にブロックされたURL（おそらくこのページのもとのURLであることを期待するが、完全ではない気がする） */
-	private var lastBlockPage:Page;
+	/* ブロックされたURL */
+	private var targetPage:Page;
 	/* view */
 	private var view:BlockView;
 	
-	
+	/** 解除後に遷移する数。href="#"なら-2、それ以外なら-1でいいはず */
+	private static inline var HISTORY_BACK_NUM:Int = -2;
 	
 	/* ================================================================
 	 * 基本処理
@@ -49,7 +51,7 @@ class Block
 		// 初期データの取得
 //		lastBlockPage = localStorageDetail.getLastBlockPage();
 		var params:StringMap<String> = Request.getParams();
-		lastBlockPage = new Page(StringTools.urlDecode(params.get(RequestParams.TITLE)), StringTools.urlDecode(params.get(RequestParams.URL)));
+		targetPage = new Page(StringTools.urlDecode(params.get(RequestParams.TITLE)), StringTools.urlDecode(params.get(RequestParams.URL)));
 		// viewの用意
 		view = new BlockView(this, localStorageDetail);
 		// 準備完了タイミングで初期描画
@@ -66,7 +68,7 @@ class Block
 		isReady = true;
 		// 描画呼び出し
 		view.initialize();
-		view.draw(lastBlockPage);
+		view.draw(targetPage);
 	}
 	
 	/*
@@ -87,7 +89,7 @@ class Block
 	 */
 	public function addLaterList():Void
 	{
-		localStorageDetail.addLaterList(lastBlockPage.clone());
+		localStorageDetail.addLaterList(targetPage.clone());
 	}
 	
 	/**
@@ -96,7 +98,7 @@ class Block
 	public function startUnblock(unblockTime:Float):Void
 	{
 		localStorageDetail.startUnblock(unblockTime);
-		Browser.window.location.assign(lastBlockPage.url);
+		Browser.window.history.go(HISTORY_BACK_NUM);
 	}
 	
 	/*
@@ -105,6 +107,6 @@ class Block
 	public function addWhiteList(url:String):Void
 	{
 		localStorageDetail.addWhitelist(url);
-		Browser.window.location.assign(lastBlockPage.url);
+		Browser.window.history.go(HISTORY_BACK_NUM);
 	}
 }

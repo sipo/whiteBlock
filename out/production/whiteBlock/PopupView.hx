@@ -1,4 +1,5 @@
 package ;
+import common.Page;
 import common.StringUtil;
 import storage.UnblockState;
 import storage.LocalStorageDetail;
@@ -10,11 +11,17 @@ private typedef LaterKit = {
 	deleteLaterUrl_clickable:js.JQuery
 }
 private typedef LaterKitContext = {
-	url:String,
-	titleAndUrl:String
+	urlFull:String,
+	urlShort:String,
+	title:String
 }
 private typedef TodayUnblockTotalContext = {
 	time:String
+}
+private typedef TotalDisplayContext = {
+	isYesterdayData:Bool,
+	yesterdayBlockTotal:String,
+	todayBlockTotal:String
 }
 class PopupView {
 	
@@ -25,6 +32,9 @@ class PopupView {
 	private var localStorageDetail:LocalStorageDetail;
 	/* 最終描画のブロック状態がどうなっているか */
 	private var lastDisplayIsUnblock:Bool;
+	
+	private static inline var URL_LIMIT:Int = 50;
+	private static inline var TITLE_LIMIT:Int = 50;
 	
 	/* --------------------------------
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
@@ -41,11 +51,16 @@ class PopupView {
 	private var todayUnblockTotal_container:JQuery;     // ブロック解除する時間
 	private var todayUnblockTotalBase:Template;
 	
+	private var laterListBlockMessage_switch:JQuery;
 	private var laterList_container:JQuery; // あとで見るリスト
 	private var laterKits:Array<LaterKit>; // 追加されたあとで見るリストの１つずつの情報
 	
+	private var totalDisplay_container:JQuery;
+	private var totalDisplayBase:Template;
 	
-	// <li class="laterUrl"><a href="::url::" class="laterUrlLink">::titleAndUrl::</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
+	
+	
+	// <li class="laterKit"><a href="::urlFull::">::title::(::urlShort::)</a>(<a href="#" class="deleteLaterUrl">削除</a>)</li>
 	private var laterKitBase:Template;
 	
 	/* ================================================================
@@ -85,15 +100,19 @@ class PopupView {
 		unblockTimeLeft_text = new JQuery("#unblockTimeLeft");
 		endUnblock_clickable = new JQuery("#endUnblock");
 		
+		laterListBlockMessage_switch = new JQuery("#laterListBlockMessage");
 		laterList_container = new JQuery("#laterList");
 		laterKits = [];
 		
+		totalDisplay_container = new JQuery("#totalDisplay");
 		
 		// テンプレート情報を取得し、中身のHTMLを削除
 		todayUnblockTotalBase = new Template(todayUnblockTotal_container.html());
 		todayUnblockTotal_container.html("");
 		laterKitBase = new Template(laterList_container.html());
 		laterList_container.html("");
+		totalDisplayBase = new Template(totalDisplay_container.html());
+		totalDisplay_container.html("");
 		
 		// イベントの登録
 		unblock_clickable.click(unblock_clickHandler);
@@ -143,6 +162,8 @@ class PopupView {
 			var time:Float = unblockState.unblockTime + unblockState.switchTime - date.getTime();
 			unblockTimeLeft_text.html(StringUtil.timeDisplay(time, true));
 		}
+		// あとでリスト
+		// 合計表示
 	}
 	
 	/**
@@ -150,7 +171,52 @@ class PopupView {
 	 */
 	public function drawLaterList():Void
 	{
-		
+		Note.log("drawLaterList");
+		laterList_container.html("");	// 一度クリア
+		if (!localStorageDetail.getUnblockState().isUnblock){
+			laterListBlockMessage_switch.show();
+			return;	// 以下の処理をカット
+		}else{
+			laterListBlockMessage_switch.hide();
+		}
+		var laterList:Array<Page> = localStorageDetail.getLaterList();
+		Note.log("laterList = " + laterList);
+		for (i in 0...laterList.length) {
+			// htmlを配置
+			var page = laterList[i];
+			var laterKitContext:LaterKitContext = {
+				urlFull:page.url,
+				urlShort:StringUtil.limit(page.url, URL_LIMIT),
+				title:StringUtil.limit(page.title, URL_LIMIT)
+			}
+			laterList_container.append(laterKitBase.execute(laterKitContext));
+			// 要素を取得
+			var laterKit_container:JQuery = laterList_container.children(".laterKit").eq(i);
+			var laterKit_linkLaterUrl_clickable:JQuery = laterKit_container.children(".linkLaterUrl");
+			var laterKit_deleteLaterUrl_clickable:JQuery = laterKit_container.children(".deleteLaterUrl");
+			// イベントを追加
+			laterKit_linkLaterUrl_clickable.click(function (event:JqEvent){	laterUrlLink_clickHandler(event, i);});
+			laterKit_deleteLaterUrl_clickable.click(function (event:JqEvent){	laterUrlDelete_clickHandler(event, i);});
+		}
+	}
+	
+	/**
+	 * 合計時間描画
+	 */
+	public function drawTotal():Void
+	{
+		Note.log("drawTotal");
+		var unblockState:UnblockState = localStorageDetail.getUnblockState();
+		var date:Date = Date.now();
+		var yesterdayBlockTotalTime:Float = 24 * 60 * 60 * 1000 - unblockState.yesterdayUnblockTotal;
+		var today0:Date = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+		var todayBlockTotalTime:Float = date.getTime() - today0.getTime() - unblockState.todayUnblockTotal;
+		var totalDisplayContext:TotalDisplayContext = {
+			isYesterdayData:(unblockState.yesterdayUnblockTotal != -1),
+			yesterdayBlockTotal:StringUtil.timeDisplay(yesterdayBlockTotalTime, false),
+			todayBlockTotal:StringUtil.timeDisplay(todayBlockTotalTime, false)
+		};
+		totalDisplay_container.html(totalDisplayBase.execute(totalDisplayContext));
 	}
 	
 	/* ================================================================
@@ -181,6 +247,7 @@ class PopupView {
 	private function laterUrlLink_clickHandler(event:JqEvent, index:Int):Void
 	{
 		Note.log("laterUrlLink_clickHandler " + index);
+		popup.openLater(index);
 	}
 	
 	/*
@@ -189,5 +256,6 @@ class PopupView {
 	private function laterUrlDelete_clickHandler(event:JqEvent, index:Int):Void
 	{
 		Note.log("laterUrlDelete_clickHandler " + index);
+		popup.deleteLater(index);
 	}
 }
