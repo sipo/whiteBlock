@@ -220,7 +220,7 @@ PopupView.prototype = {
 		while(_g1 < _g) {
 			var i = [_g1++];
 			var page = laterList[i[0]];
-			var laterKitContext = { urlFull : page.url, urlShort : common.StringUtil.limit(page.url,50), title : common.StringUtil.limit(page.title,50)};
+			var laterKitContext = { urlFull : page.get_escapeUrl(), urlShort : common.StringUtil.limit(page.get_escapeUrl(),50), title : common.StringUtil.limit(page.get_escapeTitle(),50)};
 			this.laterList_container.append(this.laterKitBase.execute(laterKitContext));
 			var laterKit_container = this.laterList_container.children(".laterKit").eq(i[0]);
 			var laterKit_linkLaterUrl_clickable = laterKit_container.children(".linkLaterUrl");
@@ -341,6 +341,12 @@ StringBuf.prototype = {
 	}
 	,__class__: StringBuf
 }
+var StringTools = function() { }
+StringTools.__name__ = true;
+StringTools.htmlEscape = function(s,quotes) {
+	s = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+	return quotes?s.split("\"").join("&quot;").split("'").join("&#039;"):s;
+}
 var ValueType = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
 ValueType.TNull = ["TNull",0];
 ValueType.TNull.toString = $estr;
@@ -430,7 +436,13 @@ common.Page.createArrayFromJson = function(jsonData) {
 	return ans;
 }
 common.Page.prototype = {
-	clone: function() {
+	get_escapeUrl: function() {
+		return StringTools.htmlEscape(this.url);
+	}
+	,get_escapeTitle: function() {
+		return StringTools.htmlEscape(this.title);
+	}
+	,clone: function() {
 		return new common.Page(this.title,this.url);
 	}
 	,__class__: common.Page

@@ -2,9 +2,9 @@ package common;
 class Page {
 	
 	/** タイトル */
-	public var title:String;
+	private var title:String;
 	/** URL */
-	public var url:String;
+	private var url:String;
 	
 	public function new(title:String, url:String)
 	{
@@ -43,5 +43,18 @@ class Page {
 			ans.push(new Page(jsonData[i].title, jsonData[i].url));
 		}
 		return ans;
+	}
+	
+	/** エスケープタイトル */
+	public var escapeTitle(get, null):String;
+	public function get_escapeTitle():String
+	{
+		return StringTools.htmlEscape(title);
+	}
+	/** エスケープURL */
+	public var escapeUrl(get, null):String;
+	public function get_escapeUrl():String
+	{
+		return StringTools.htmlEscape(url);
 	}
 }

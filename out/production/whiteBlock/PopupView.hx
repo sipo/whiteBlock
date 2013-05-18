@@ -185,9 +185,9 @@ class PopupView {
 			// htmlを配置
 			var page = laterList[i];
 			var laterKitContext:LaterKitContext = {
-				urlFull:page.url,
-				urlShort:StringUtil.limit(page.url, URL_LIMIT),
-				title:StringUtil.limit(page.title, URL_LIMIT)
+				urlFull:page.escapeUrl,
+				urlShort:StringUtil.limit(page.escapeUrl, URL_LIMIT),
+				title:StringUtil.limit(page.escapeTitle, URL_LIMIT)
 			}
 			laterList_container.append(laterKitBase.execute(laterKitContext));
 			// 要素を取得

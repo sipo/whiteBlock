@@ -9,24 +9,30 @@
         <h1>このページはWhiteBlockによってブロックされました。</h1>
         <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
         <h2>以下から動作を選んで下さい。</h2>
-        <ul>
-            <li>
-                <p><a href="#" id="addLaterList">あとで見るリストに追加する</a><small>（推奨）</small></p>
-                <p><small>ヒント：拡張機能のアイコンをクリックすると追加したリストを確認できます。</small></p>
-            </li>
-            <li>
-                <p><a href="#" id="unblock">少しだけブロックを解除する</a></p><!-- ここの href="#" を消す場合は、Block.hxのHISTORY_BACK_NUMを-1にする -->
+        <section>
+            <h1>少しだけブロックを解除する</h1>
+            <p>
                 <label for="unblockTime">解除する時間</label>
                 <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
-                <p id="blockTime"><small>最後に解除したのは::time::前です</small></p>
-                <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
-            </li>
-            <li>
-                <p><a href="#" id="addWhiteList">ホワイトリストに追加する</a></p>
+                <strong><a href="#" id="unblock">解除する</a></strong><!-- ここの href="#" を消す場合は、Block.hxのHISTORY_BACK_NUMを-1にする -->
+            </p>
+            <p id="blockTime"><small>最後に解除したのは::time::前です</small></p>
+            <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
+        </section>
+        <section>
+            <h1>あとで見るリストに追加する</h1>
+            <p><a href="#" id="addLaterList">追加する</a></p>
+            <p id="addLaterListComplete">追加しました</p>
+            <p><small>ヒント：仕事中はこちらを使いましょう。拡張機能のアイコンをクリックすると追加したリストを確認できます。</small></p>
+        </section>
+        <section>
+            <h1>ホワイトリストに追加する</h1>
+            <p>
                 <label for="addWhitelistText">追加する文字列</label>
                 <input type="text" id="addWhitelistText" value="">
-                <p><small>ヒント：ホワイトリストへの追加は慎重にしましょう。業務で何度も使用するようなページ以外は、「少しだけブロックを解除する」を利用するほうがいいでしょう。</small></p>
-            </li>
-        </ul>
+                <a href="#" id="addWhiteList">追加する</a>
+            </p>
+            <p><small>ヒント：ホワイトリストへの追加は慎重にしましょう。業務で何度も使用するようなページ以外は、「少しだけブロックを解除する」を利用するほうがいいでしょう。</small></p>
+        </section>
     </body>
 </html>

@@ -1,4 +1,5 @@
 package ;
+import StringTools;
 import storage.UnblockState;
 import common.Page;
 import storage.LocalStorageDetail;
@@ -34,6 +35,7 @@ class BlockView {
 	private var targetPageBase:Template;
 	
 	private var addLaterList_clickable:JQuery;	// あとで見る追加ボタン
+	private var addLaterListComplete_switch:JQuery;
 	
 	private var unblock_clickable:JQuery;         // ブロック解除開始リンク
 	private var unblockTime:UnblockTimeDownList;     // ブロック解除する時間
@@ -74,6 +76,7 @@ class BlockView {
 		targetPage_container = new JQuery("#targetPage");
 		
 		addLaterList_clickable = new JQuery("#addLaterList");
+		addLaterListComplete_switch = new JQuery("#addLaterListComplete");
 		
 		unblock_clickable = new JQuery("#unblock");
 		blockTime_container = new JQuery("#blockTime");
@@ -109,8 +112,16 @@ class BlockView {
 		var blockTime:Float = date.getTime() - unblockState.switchTime;
 		var blockTimeContext:BlockTimeContext = {time:StringUtil.timeDisplay(blockTime, false)};
 		blockTime_container.html(blockTimeBase.execute(blockTimeContext));
-		var targetPageContext:TargetPageContext = {urlFull:targetPage.url, urlShort:StringUtil.limit(targetPage.url, URL_LIMIT), title:StringUtil.limit(targetPage.title, URL_LIMIT)};
+		
+		var targetPageContext:TargetPageContext = {
+			urlFull:targetPage.escapeUrl,
+			urlShort:StringUtil.limit(targetPage.escapeUrl, URL_LIMIT),
+			title:StringUtil.limit(targetPage.escapeTitle, URL_LIMIT)
+		};
 		targetPage_container.html(targetPageBase.execute(targetPageContext));
+		
+		// あとで見るボタン
+		addLaterListComplete_switch.hide();
 		
 		// ブロック解除
 		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultValue);
@@ -119,7 +130,7 @@ class BlockView {
 	
 		// ホワイトリスト
 		// 最後にアクセスしたURLを候補に
-		var url:String = targetPage.url;
+		var url:String = targetPage.escapeUrl;
 		addWhitelistText_input.val(url);
 		// フィールドの長さをURLに合わせる。ただし、大きくなり過ぎないように
 		var fieldSize:Int = url.length;
@@ -138,6 +149,8 @@ class BlockView {
 	{
 		Note.log("addLaterList_clickHandler");
 		block.addLaterList();
+		addLaterListComplete_switch.show();
+		addLaterList_clickable.hide();
 	}
 	
 	/*

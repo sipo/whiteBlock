@@ -54,6 +54,8 @@ BlockView.prototype = {
 	,addLaterList_clickHandler: function(event) {
 		Note.log("addLaterList_clickHandler");
 		this.block.addLaterList();
+		this.addLaterListComplete_switch.show();
+		this.addLaterList_clickable.hide();
 	}
 	,draw: function(targetPage) {
 		Note.log("draw");
@@ -62,12 +64,13 @@ BlockView.prototype = {
 		var blockTime = date.getTime() - unblockState.switchTime;
 		var blockTimeContext = { time : common.StringUtil.timeDisplay(blockTime,false)};
 		this.blockTime_container.html(this.blockTimeBase.execute(blockTimeContext));
-		var targetPageContext = { urlFull : targetPage.url, urlShort : common.StringUtil.limit(targetPage.url,100), title : common.StringUtil.limit(targetPage.title,100)};
+		var targetPageContext = { urlFull : targetPage.get_escapeUrl(), urlShort : common.StringUtil.limit(targetPage.get_escapeUrl(),100), title : common.StringUtil.limit(targetPage.get_escapeTitle(),100)};
 		this.targetPage_container.html(this.targetPageBase.execute(targetPageContext));
+		this.addLaterListComplete_switch.hide();
 		this.unblockTime.draw(this.localStorageDetail.getUnblockTimeList(),this.localStorageDetail.unblockTimeDefaultValue);
 		var todayUnblockTotalContext = { time : common.StringUtil.timeDisplay(unblockState.todayUnblockTotal,false)};
 		this.todayUnblockTotal_container.html(this.todayUnblockTotalBase.execute(todayUnblockTotalContext));
-		var url = targetPage.url;
+		var url = targetPage.get_escapeUrl();
 		this.addWhitelistText_input.val(url);
 		var fieldSize = url.length;
 		if(100 < fieldSize) fieldSize = 100;
@@ -76,6 +79,7 @@ BlockView.prototype = {
 	,initialize: function() {
 		this.targetPage_container = new js.JQuery("#targetPage");
 		this.addLaterList_clickable = new js.JQuery("#addLaterList");
+		this.addLaterListComplete_switch = new js.JQuery("#addLaterListComplete");
 		this.unblock_clickable = new js.JQuery("#unblock");
 		this.blockTime_container = new js.JQuery("#blockTime");
 		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
@@ -261,6 +265,10 @@ StringTools.__name__ = true;
 StringTools.urlDecode = function(s) {
 	return decodeURIComponent(s.split("+").join(" "));
 }
+StringTools.htmlEscape = function(s,quotes) {
+	s = s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+	return quotes?s.split("\"").join("&quot;").split("'").join("&#039;"):s;
+}
 var ValueType = $hxClasses["ValueType"] = { __ename__ : true, __constructs__ : ["TNull","TInt","TFloat","TBool","TObject","TFunction","TClass","TEnum","TUnknown"] }
 ValueType.TNull = ["TNull",0];
 ValueType.TNull.toString = $estr;
@@ -360,7 +368,13 @@ common.Page.createArrayFromJson = function(jsonData) {
 	return ans;
 }
 common.Page.prototype = {
-	clone: function() {
+	get_escapeUrl: function() {
+		return StringTools.htmlEscape(this.url);
+	}
+	,get_escapeTitle: function() {
+		return StringTools.htmlEscape(this.title);
+	}
+	,clone: function() {
 		return new common.Page(this.title,this.url);
 	}
 	,__class__: common.Page
