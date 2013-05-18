@@ -171,6 +171,14 @@ class OptionView {
 	private function save_clickHandler(event:JqEvent):Void
 	{
 		Note.log("save_clickHandler");
+		
+		
+//		unblockTimeList_textArea = new JQuery("#unblockTimeList");
+//		unblockTimeDefaultIndex = new UnblockTimeDownList(new JQuery("#unblockTimeDefaultIndex"));
+//		whitelist_textArea = new JQuery("#whitelist");
+//		whitelistUseRegexp_checkbox = new JQuery("#whitelistUseRegexp");
+//		blacklist_textArea = new JQuery("#blacklist");
+//		blacklistUseRegexp_checkbox = new JQuery("#blacklistUseRegexp");
 	}
 	
 	/*
