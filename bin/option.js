@@ -134,7 +134,15 @@ Option.main = function() {
 	Option.option = new Option();
 }
 Option.prototype = {
-	window_timeoutHandler: function() {
+	save: function(data) {
+		this.localStorageDetail.setUnblockTimeList(data.unblockTimeList);
+		this.localStorageDetail.setUnblockTimeDefaultIndex(data.unblockTimeDefaultValue);
+		this.localStorageDetail.setWhitelist(data.whitelist);
+		this.localStorageDetail.setWhitelistUseRegexp(data.whitelistUseRegexp);
+		this.localStorageDetail.setBlacklist(data.blacklist);
+		this.localStorageDetail.setBlacklistUseRegexp(data.blacklistUseRegexp);
+	}
+	,window_timeoutHandler: function() {
 	}
 	,storage_changeHandler: function(key) {
 	}
@@ -149,22 +157,66 @@ var OptionView = function(option,localStorageDetail) {
 };
 OptionView.__name__ = true;
 OptionView.prototype = {
-	body_unloadHandler: function(event) {
+	cleanBreak: function(original) {
+		return new EReg("(\r\n)|(\r)","g").replace(original,"\n");
+	}
+	,switchChange: function(isChange) {
+		this.anyChange = isChange;
+		if(isChange) this.save_clickable.removeAttr("disabled"); else this.save_clickable.attr("disabled","disabled");
+	}
+	,body_unloadHandler: function(event) {
+	}
+	,checkboxToBool: function(checkbox) {
+		return checkbox["is"](":" + "checked");
+	}
+	,textAreaToArray: function(textArea) {
+		var tmpList = this.cleanBreak(textArea.val()).split("\n");
+		var ans = [];
+		var _g1 = 0, _g = tmpList.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var text = tmpList[i];
+			if(text == "") continue;
+			ans.push(text);
+		}
+		return ans;
 	}
 	,save_clickHandler: function(event) {
 		Note.log("save_clickHandler");
+		this.switchChange(false);
+		var unblockTimeList = [];
+		var unblockTimeListString = this.cleanBreak(this.unblockTimeList_textArea.val()).split("\n");
+		var _g1 = 0, _g = unblockTimeListString.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			unblockTimeList.push(Std.parseFloat(unblockTimeListString[i]) * 60000);
+		}
+		var unblockTimeDefaultValue = this.unblockTimeDefaultIndex.getValue();
+		var whitelist = this.textAreaToArray(this.whitelist_textArea);
+		var whitelistUseRegexp = this.checkboxToBool(this.whitelistUseRegexp_checkbox);
+		var blacklist = this.textAreaToArray(this.blacklist_textArea);
+		var blacklistUseRegexp = this.checkboxToBool(this.blacklistUseRegexp_checkbox);
+		var data = { unblockTimeList : unblockTimeList, unblockTimeDefaultValue : unblockTimeDefaultValue, whitelist : whitelist, whitelistUseRegexp : whitelistUseRegexp, blacklist : blacklist, blacklistUseRegexp : blacklistUseRegexp};
+		Note.log("save " + Std.string(data));
+		this.option.save(data);
+	}
+	,any_changeHandler: function(event) {
+		Note.log("any_changeHandler");
+		this.switchChange(true);
 	}
 	,unblockTimeDefaultIndex_changeHandler: function(event) {
 		Note.log("unblockTimeList_changeHandler");
 		this.lastUnblockTimeDefaultValue = this.unblockTimeDefaultIndex.getValue();
+		this.any_changeHandler(null);
 	}
 	,unblockTimeList_changeHandler: function(event) {
 		Note.log("unblockTimeList_changeHandler");
 		this.drawUnblockTimeDefault();
+		this.any_changeHandler(null);
 	}
 	,drawUnblockTimeDefault: function() {
 		var unblockTimeList_textAreaValue = this.unblockTimeList_textArea.val();
-		unblockTimeList_textAreaValue = new EReg("(\r\n)|(\r)","g").replace(unblockTimeList_textAreaValue,"\n");
+		unblockTimeList_textAreaValue = this.cleanBreak(unblockTimeList_textAreaValue);
 		var unblockMinutesString = this.unblockTimeList_textArea.val().split("\n");
 		var timeList = [];
 		var _g1 = 0, _g = unblockMinutesString.length;
@@ -184,7 +236,7 @@ OptionView.prototype = {
 	}
 	,drawListTextArea: function(textArea,list) {
 		textArea.val(list.join("\n"));
-		var rows = list.length;
+		var rows = list.length + 1;
 		rows = rows < 5?5:20 < rows?20:rows;
 		textArea.attr("rows",Std.string(rows));
 	}
@@ -214,8 +266,15 @@ OptionView.prototype = {
 		this.blacklist_textArea = new js.JQuery("#blacklist");
 		this.blacklistUseRegexp_checkbox = new js.JQuery("#blacklistUseRegexp");
 		this.save_clickable = new js.JQuery("#save");
+		this.unblockTimeList_textArea.change($bind(this,this.unblockTimeList_changeHandler));
 		this.unblockTimeDefaultIndex.change($bind(this,this.unblockTimeDefaultIndex_changeHandler));
+		this.whitelist_textArea.change($bind(this,this.any_changeHandler));
+		this.whitelistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
+		this.blacklist_textArea.change($bind(this,this.any_changeHandler));
+		this.blacklistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
+		this.save_clickable.click($bind(this,this.save_clickHandler));
 		this.drawConfig();
+		this.switchChange(false);
 	}
 	,__class__: OptionView
 }
@@ -1381,16 +1440,16 @@ storage.LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "unblockTimeList":
-			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
+			this.unblockTimeList = [60000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultValue = this.unblockTimeList[1];
+			this.unblockTimeDefaultValue = this.unblockTimeList[0];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
 			break;
 		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			this.whitelist = ["http://t.co","https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
 			this.whitelistUseRegexp = false;
@@ -1680,6 +1739,7 @@ OptionView.CHECKBOX_ATTR = "checked";
 OptionView.TEXTAREA_ROWS_ATTR = "rows";
 OptionView.TEXTAREA_ROWS_MIN = 5;
 OptionView.TEXTAREA_ROWS_MAX = 20;
+OptionView.SAVE_DISABLED_ATTR = "disabled";
 common.StringUtil.DOT_NUM = 3;
 common.StringUtil.DOTS = "...";
 haxe.Template.splitter = new EReg("(::[A-Za-z0-9_ ()&|!+=/><*.\"-]+::|\\$\\$([A-Za-z0-9_-]+)\\()","");

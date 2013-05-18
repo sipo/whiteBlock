@@ -29,10 +29,6 @@ class BlockView {
 	/* --------------------------------
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
 	 */
-	
-//  <p id="blockTime"><small>::time::経過</small></p>
-	private var blockTime_container:JQuery;	// ブロック情報表示
-	private var blockTimeBase:Template;
 //  <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
 	private var targetPage_container:JQuery;	// ブロック情報表示
 	private var targetPageBase:Template;
@@ -41,6 +37,9 @@ class BlockView {
 	
 	private var unblock_clickable:JQuery;         // ブロック解除開始リンク
 	private var unblockTime:UnblockTimeDownList;     // ブロック解除する時間
+//  <p id="blockTime"><small>::time::経過</small></p>
+	private var blockTime_container:JQuery;	// ブロック情報表示
+	private var blockTimeBase:Template;
 //  <p id="todayUnblockTotal"><small>今日は合計::time::解除しています</small></p>
 	private var todayUnblockTotal_container:JQuery;     // ブロック解除する時間
 	private var todayUnblockTotalBase:Template;
@@ -72,12 +71,12 @@ class BlockView {
 		
 		
 		// DOMの初期化
-		blockTime_container = new JQuery("#blockTime");
 		targetPage_container = new JQuery("#targetPage");
 		
 		addLaterList_clickable = new JQuery("#addLaterList");
 		
 		unblock_clickable = new JQuery("#unblock");
+		blockTime_container = new JQuery("#blockTime");
 		unblockTime = new UnblockTimeDownList(new JQuery("#unblockTime"));
 		todayUnblockTotal_container = new JQuery("#todayUnblockTotal");
 		

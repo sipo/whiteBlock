@@ -35,7 +35,7 @@ class LocalStorageDetail {
 		flushItem(LocalStorageKey.UNBLOCK_TIME_LIST);	// Storageへ反映
 	}
 	
-	/** ブロック解除選択時間のデフォルト選択のインデックス番号 */
+	/** ブロック解除選択時間のデフォルト選択の時間値 */
 	public var unblockTimeDefaultValue(default, null):Float;
 	public function setUnblockTimeDefaultIndex(value:Float):Float
 	{
@@ -226,7 +226,7 @@ class LocalStorageDetail {
 				// 特殊なので値なし
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = [
-					3 * 60 * 1000,
+					1 * 60 * 1000,
 					5 * 60 * 1000,
 					10 * 60 * 1000,
 					20 * 60 * 1000,
@@ -234,11 +234,12 @@ class LocalStorageDetail {
 					60 * 60 * 1000
 				];
 			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
-				unblockTimeDefaultValue = unblockTimeList[1];
+				unblockTimeDefaultValue = unblockTimeList[0];
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createDefault();
 			case LocalStorageKey.WHITELIST:
 				whitelist = [
+					"http://t.co",
 					"https://www.google.co.jp/webhp",
 					"https://www.google.co.jp/search",
 					"https://www.google.com/calendar",

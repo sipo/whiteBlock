@@ -217,6 +217,8 @@ PopupView.prototype = {
 				this.blockTime_text.html(common.StringUtil.timeDisplay(time,true));
 			}
 			if(full) this.unblockTime.draw(unblockTimeList,this.localStorageDetail.unblockTimeDefaultValue);
+			var todayUnblockTotalContext = { time : common.StringUtil.timeDisplay(unblockState.todayUnblockTotal,false)};
+			this.todayUnblockTotal_container.html(this.todayUnblockTotalBase.execute(todayUnblockTotalContext));
 		} else {
 			if(full) {
 				this.blockDisplay_switch.hide();
@@ -227,19 +229,19 @@ PopupView.prototype = {
 		}
 	}
 	,initialize: function() {
-		console.log("optionView initialize");
-		console.log("a");
+		Note.log("optionView initialize");
 		this.blockDisplay_switch = new js.JQuery("#blockDisplay");
 		this.blockTime_text = new js.JQuery("#blockTime");
 		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.unblock_clickable = new js.JQuery("#unblock");
+		this.todayUnblockTotal_container = new js.JQuery("#todayUnblockTotal");
 		this.unblockDisplay_switch = new js.JQuery("#unblockDisplay");
 		this.unblockTimeLeft_text = new js.JQuery("#unblockTimeLeft");
 		this.endUnblock_clickable = new js.JQuery("#endUnblock");
-		console.log("b");
 		this.laterList_container = new js.JQuery("#laterList");
 		this.laterKits = [];
-		console.log("c " + this.laterList_container.html());
+		this.todayUnblockTotalBase = new haxe.Template(this.todayUnblockTotal_container.html());
+		this.todayUnblockTotal_container.html("");
 		this.laterKitBase = new haxe.Template(this.laterList_container.html());
 		this.laterList_container.html("");
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
@@ -1409,16 +1411,16 @@ storage.LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "unblockTimeList":
-			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
+			this.unblockTimeList = [60000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultValue = this.unblockTimeList[1];
+			this.unblockTimeDefaultValue = this.unblockTimeList[0];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
 			break;
 		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			this.whitelist = ["http://t.co","https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
 			this.whitelistUseRegexp = false;

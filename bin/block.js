@@ -72,10 +72,10 @@ BlockView.prototype = {
 		this.addWhitelistText_input.attr("size",fieldSize);
 	}
 	,initialize: function() {
-		this.blockTime_container = new js.JQuery("#blockTime");
 		this.targetPage_container = new js.JQuery("#targetPage");
 		this.addLaterList_clickable = new js.JQuery("#addLaterList");
 		this.unblock_clickable = new js.JQuery("#unblock");
+		this.blockTime_container = new js.JQuery("#blockTime");
 		this.unblockTime = new common.UnblockTimeDownList(new js.JQuery("#unblockTime"));
 		this.todayUnblockTotal_container = new js.JQuery("#todayUnblockTotal");
 		this.addWhiteList_clickable = new js.JQuery("#addWhiteList");
@@ -1417,16 +1417,16 @@ storage.LocalStorageDetail.prototype = {
 		case "version":
 			break;
 		case "unblockTimeList":
-			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
+			this.unblockTimeList = [60000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultValue = this.unblockTimeList[1];
+			this.unblockTimeDefaultValue = this.unblockTimeList[0];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
 			break;
 		case "whitelist":
-			this.whitelist = ["https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
+			this.whitelist = ["http://t.co","https://www.google.co.jp/webhp","https://www.google.co.jp/search","https://www.google.com/calendar","https://maps.google.co.jp/","https://drive.google.com","https://github.com","http://www.alc.co.jp","http://eow.alc.co.jp"];
 			break;
 		case "whitelistUseRegexp":
 			this.whitelistUseRegexp = false;

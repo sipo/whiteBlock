@@ -1,4 +1,5 @@
 package ;
+import Option.StorageSaveData;
 import storage.UnblockState;
 import storage.LocalStorageDetail;
 import common.UnblockTimeDownList;
@@ -13,6 +14,8 @@ class OptionView {
 	private var option:Option;
 	/* データ本体。ここで操作したらダメ（本来は依存を消すべきだけど、とりあえず規約で止める） */
 	private var localStorageDetail:LocalStorageDetail;
+	/* 何らかの変更があった場合 */
+	private var anyChange:Bool;
 	
 	/* 最後に選択されたデフォルト値が示すアンブロック時間。一致するものがあれば、プルダウン選択は優先的にそこへ移動する */
 	private var lastUnblockTimeDefaultValue:Float;
@@ -22,6 +25,7 @@ class OptionView {
 	private static inline var TEXTAREA_ROWS_ATTR:String = "rows";
 	private static inline var TEXTAREA_ROWS_MIN:Int = 5;
 	private static inline var TEXTAREA_ROWS_MAX:Int = 20;
+	private static inline var SAVE_DISABLED_ATTR:String = "disabled";
 	
 	/* --------------------------------
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
@@ -67,9 +71,17 @@ class OptionView {
 		blacklistUseRegexp_checkbox = new JQuery("#blacklistUseRegexp");
 		save_clickable = new JQuery("#save");
 		
+		// イベント
+		unblockTimeList_textArea.change(unblockTimeList_changeHandler);
 		unblockTimeDefaultIndex.change(unblockTimeDefaultIndex_changeHandler);
+		whitelist_textArea.change(any_changeHandler);
+		whitelistUseRegexp_checkbox.change(any_changeHandler);
+		blacklist_textArea.change(any_changeHandler);
+		blacklistUseRegexp_checkbox.change(any_changeHandler);
+		save_clickable.click(save_clickHandler);
 		
 		drawConfig();
+		switchChange(false);
 	}
 	
 	
@@ -101,6 +113,7 @@ class OptionView {
 		drawListTextArea(blacklist_textArea, localStorageDetail.getBlacklist());
 		
 		drawCheckbox(blacklistUseRegexp_checkbox, localStorageDetail.blacklistUseRegexp);
+		
 	}
 	/*
 	 * リスト表示の描画
@@ -108,7 +121,7 @@ class OptionView {
 	private function drawListTextArea(textArea:JQuery, list:Array<String>):Void
 	{
 		textArea.val(list.join("\n"));
-		var rows:Int = list.length;
+		var rows:Int = list.length + 1;
 		rows = if (rows < TEXTAREA_ROWS_MIN) TEXTAREA_ROWS_MIN else if (TEXTAREA_ROWS_MAX < rows) TEXTAREA_ROWS_MAX else rows;
 		textArea.attr(TEXTAREA_ROWS_ATTR, Std.string(rows));
 	}
@@ -127,7 +140,7 @@ class OptionView {
 	public function drawUnblockTimeDefault():Void
 	{
 		var unblockTimeList_textAreaValue:String = unblockTimeList_textArea.val();
-		unblockTimeList_textAreaValue = new EReg("(\r\n)|(\r)", "g").replace(unblockTimeList_textAreaValue, "\n");
+		unblockTimeList_textAreaValue = cleanBreak(unblockTimeList_textAreaValue);
 		var unblockMinutesString:Array<String> = unblockTimeList_textArea.val().split("\n");
 		// 時間リストの生成
 		var timeList:Array<Float> = [];
@@ -154,6 +167,7 @@ class OptionView {
 	{
 		Note.log("unblockTimeList_changeHandler");
 		drawUnblockTimeDefault();
+		any_changeHandler(null);
 	}
 	
 	/*
@@ -163,6 +177,16 @@ class OptionView {
 	{
 		Note.log("unblockTimeList_changeHandler");
 		lastUnblockTimeDefaultValue = unblockTimeDefaultIndex.getValue();
+		any_changeHandler(null);
+	}
+	
+	/*
+	 * 何らかデータの変更
+	 */
+	private function any_changeHandler(event:JqEvent):Void
+	{
+		Note.log("any_changeHandler");
+		switchChange(true);
 	}
 	
 	/*
@@ -171,20 +195,74 @@ class OptionView {
 	private function save_clickHandler(event:JqEvent):Void
 	{
 		Note.log("save_clickHandler");
+		switchChange(false);
+		
+		var unblockTimeList:Array<Float> = [];
+		var unblockTimeListString:Array<String> = cleanBreak(unblockTimeList_textArea.val()).split("\n");
+		for(i in 0...unblockTimeListString.length) unblockTimeList.push(Std.parseFloat(unblockTimeListString[i]) * MINUTE_TIME);	// 本当はここで、変換できなかったら警告を出すのがいいのだろうけど・・・
+		
+		var unblockTimeDefaultValue:Float = unblockTimeDefaultIndex.getValue();
+		
+		var whitelist:Array<String> = textAreaToArray(whitelist_textArea);
+		var whitelistUseRegexp:Bool = checkboxToBool(whitelistUseRegexp_checkbox);
+		var blacklist:Array<String> = textAreaToArray(blacklist_textArea);
+		var blacklistUseRegexp:Bool = checkboxToBool(blacklistUseRegexp_checkbox);
+		
+		var data:StorageSaveData = {
+			unblockTimeList:unblockTimeList,
+			unblockTimeDefaultValue:unblockTimeDefaultValue,
+			whitelist:whitelist,
+			whitelistUseRegexp:whitelistUseRegexp,
+			blacklist:blacklist,
+			blacklistUseRegexp:blacklistUseRegexp
+		}
+		Note.log("save " + data);
+		option.save(data);
+	}
+	private function textAreaToArray(textArea:JQuery):Array<String>
+	{
+		var tmpList:Array<String> = cleanBreak(textArea.val()).split("\n");
+		var ans:Array<String> = [];
+		for (i in 0...tmpList.length) {
+			var text:String = tmpList[i];
+			if (text == "") continue;
+			ans.push(text);
+		}
+		return ans;
+	}
+	private function checkboxToBool(checkbox:JQuery):Bool
+	{
+		return checkbox.is(":" + CHECKBOX_ATTR);	// JQueryのクソキモいところ。
 	}
 	
 	/*
 	 * 画面のアンロード時の処理
-	 * 設定を比較して、変更があったら注意する
+	 * 変更があったら注意する
 	 */
 	private function body_unloadHandler(event:JqEvent):Void
 	{
-		
+		// 
 	}
 	
 	/* ================================================================
 	 * 内部処理
 	 */
 	
+	/*
+	 * 何らかの変更があった常態かどうかを切り替える
+	 */
+	private function switchChange(isChange:Bool):Void
+	{
+		anyChange = isChange;
+		if (isChange) save_clickable.removeAttr(SAVE_DISABLED_ATTR);
+		else save_clickable.attr(SAVE_DISABLED_ATTR, SAVE_DISABLED_ATTR);
+	}
 	
+	/*
+	 * 改行コードを揃える
+	 */
+	private function cleanBreak(original:String):String
+	{
+		return new EReg("(\r\n)|(\r)", "g").replace(original, "\n");
+	}
 }

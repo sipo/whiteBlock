@@ -4,6 +4,14 @@ import storage.LocalStorageFactory;
 import storage.LocalStorageDetail;
 import js.Browser;
 import js.JQuery;
+typedef StorageSaveData = {
+	unblockTimeList:Array<Float>,
+	unblockTimeDefaultValue:Float,
+	whitelist:Array<String>,
+	whitelistUseRegexp:Bool,
+	blacklist:Array<String>,
+	blacklistUseRegexp:Bool
+}
 class Option {
 	
 	public static var option:Option;
@@ -69,4 +77,16 @@ class Option {
 	 * Viewからの挙動（必要ならController化する
 	 */
 	
+	/*
+	 * データの保存
+	 */
+	public function save(data:StorageSaveData):Void
+	{
+		localStorageDetail.setUnblockTimeList(data.unblockTimeList);
+		localStorageDetail.setUnblockTimeDefaultIndex(data.unblockTimeDefaultValue);
+		localStorageDetail.setWhitelist(data.whitelist);
+		localStorageDetail.setWhitelistUseRegexp(data.whitelistUseRegexp);
+		localStorageDetail.setBlacklist(data.blacklist);
+		localStorageDetail.setBlacklistUseRegexp(data.blacklistUseRegexp);
+	}
 }

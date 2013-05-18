@@ -13,6 +13,9 @@ private typedef LaterKitContext = {
 	url:String,
 	titleAndUrl:String
 }
+private typedef TodayUnblockTotalContext = {
+	time:String
+}
 class PopupView {
 	
 	
@@ -68,27 +71,27 @@ class PopupView {
 	 */
 	public function initialize()
 	{
-		trace("optionView initialize");
+		Note.log("optionView initialize");
 		// 必要変数
-		trace("a");
 		
 		// DOMの初期化
 		blockDisplay_switch = new JQuery("#blockDisplay");
 		blockTime_text = new JQuery("#blockTime");
 		unblockTime = new UnblockTimeDownList(new JQuery("#unblockTime"));
 		unblock_clickable = new JQuery("#unblock");
+		todayUnblockTotal_container = new JQuery("#todayUnblockTotal");
 		
 		unblockDisplay_switch = new JQuery("#unblockDisplay");
 		unblockTimeLeft_text = new JQuery("#unblockTimeLeft");
 		endUnblock_clickable = new JQuery("#endUnblock");
-		trace("b");
 		
 		laterList_container = new JQuery("#laterList");
 		laterKits = [];
 		
 		
 		// テンプレート情報を取得し、中身のHTMLを削除
-		trace("c " + laterList_container.html());
+		todayUnblockTotalBase = new Template(todayUnblockTotal_container.html());
+		todayUnblockTotal_container.html("");
 		laterKitBase = new Template(laterList_container.html());
 		laterList_container.html("");
 		
@@ -127,6 +130,8 @@ class PopupView {
 				// ブロック解除時間のリストを描画
 				unblockTime.draw(unblockTimeList, localStorageDetail.unblockTimeDefaultValue);
 			}
+			var todayUnblockTotalContext:TodayUnblockTotalContext = {time:StringUtil.timeDisplay(unblockState.todayUnblockTotal, false)};
+			todayUnblockTotal_container.html(todayUnblockTotalBase.execute(todayUnblockTotalContext));
 		}else{
 			// ブロック解除中
 			if (full){
