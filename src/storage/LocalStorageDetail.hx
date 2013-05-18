@@ -11,7 +11,7 @@ import js.html.Storage;
 class LocalStorageDetail {
 	
 	/* ローカルストレージ本体 */
-	private var storage:Storage;
+	private var storageEntity:Storage;
 	
 	/** ストレージデータのバージョン（将来に備えて） */
 	public static inline var STORAGE_VERSION:Int = 1;
@@ -36,12 +36,12 @@ class LocalStorageDetail {
 	}
 	
 	/** ブロック解除選択時間のデフォルト選択のインデックス番号 */
-	public var unblockTimeDefaultIndex(default, null):Int;
-	public function setUnblockTimeDefaultIndex(value:Int):Int
+	public var unblockTimeDefaultValue(default, null):Float;
+	public function setUnblockTimeDefaultIndex(value:Float):Float
 	{
-		unblockTimeDefaultIndex = value;
-		flushItem(LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX);	// Storageへ反映
-		return unblockTimeDefaultIndex;
+		unblockTimeDefaultValue = value;
+		flushItem(LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE);	// Storageへ反映
+		return unblockTimeDefaultValue;
 	}
 	
 	/** ブロック解除状態の情報 */
@@ -129,8 +129,8 @@ class LocalStorageDetail {
 				setIntItem(key, STORAGE_VERSION);
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				setJsonItem(key, unblockTimeList);
-			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
-				setIntItem(key, unblockTimeDefaultIndex);
+			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
+				setFloatItem(key, unblockTimeDefaultValue);
 			case LocalStorageKey.UNBLOCK_STATE:
 				setJsonItem(key, unblockState);
 			case LocalStorageKey.WHITELIST:
@@ -151,17 +151,22 @@ class LocalStorageDetail {
 	/* JSONに変換してからStorageに反映する */
 	private function setJsonItem(key:String, value:Dynamic):Void
 	{
-		storage.setItem(key, Json.stringify(value));
+		storageEntity.setItem(key, Json.stringify(value));
 	}
 	/* Boolを文字に変換してからStorageに反映する */
 	private function setBoolItem(key:String, value:Bool):Void
 	{
-		storage.setItem(key, if (value) "true" else "false");
+		storageEntity.setItem(key, if (value) "true" else "false");
 	}
 	/* Intを文字に変換してからStorageに反映する */
 	private function setIntItem(key:String, value:Int):Void
 	{
-		storage.setItem(key, Std.string(unblockTimeDefaultIndex));
+		storageEntity.setItem(key, Std.string(value));
+	}
+	/* Floatを文字に変換してからStorageに反映する */
+	private function setFloatItem(key:String, value:Float):Void
+	{
+		storageEntity.setItem(key, Std.string(value));
 	}
 	
 	
@@ -174,10 +179,10 @@ class LocalStorageDetail {
 				// 特殊なので値なし
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
 				unblockTimeList = getArrayFloat(key);
-			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
-				unblockTimeDefaultIndex = Std.parseInt(storage.getItem(key));
+			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
+				unblockTimeDefaultValue = Std.parseFloat(storageEntity.getItem(key));
 			case LocalStorageKey.UNBLOCK_STATE:
-				unblockState = UnblockState.createFromJson(storage.getItem(key));
+				unblockState = UnblockState.createFromJson(storageEntity.getItem(key));
 			case LocalStorageKey.WHITELIST:
 				whitelist = getArrayString(key);
 			case LocalStorageKey.WHITELIST_USE_REGEXP:
@@ -195,23 +200,23 @@ class LocalStorageDetail {
 	/* Storageから、配列に変換して取得する */
 	private function getArrayFloat(key:String):Array<Float>
 	{
-		var list:Dynamic = Json.parse(storage.getItem(key));
+		var list:Dynamic = Json.parse(storageEntity.getItem(key));
 		return [for (i in 0...list.length) Std.parseFloat(list[i])];
 	}
 	/* Storageから、配列に変換して取得する */
 	private function getArrayString(key:String):Array<String>
 	{
-		return cast(Json.parse(storage.getItem(key)));
+		return cast(Json.parse(storageEntity.getItem(key)));
 	}
 	/* Storageから、Boolに変換して取得する */
 	private function getArrayBool(key:String):Bool
 	{
-		return storage.getItem(key) == "true";
+		return storageEntity.getItem(key) == "true";
 	}
 	/* Storageから、Boolに変換して取得する */
 	private function getObject(key:String):Dynamic
 	{
-		return Json.parse(storage.getItem(key));
+		return Json.parse(storageEntity.getItem(key));
 	}
 	
 	private function createDefault(key:String):Void
@@ -228,8 +233,8 @@ class LocalStorageDetail {
 					30 * 60 * 1000,
 					60 * 60 * 1000
 				];
-			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
-				unblockTimeDefaultIndex = 2;
+			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
+				unblockTimeDefaultValue = unblockTimeList[1];
 			case LocalStorageKey.UNBLOCK_STATE:
 				unblockState = UnblockState.createDefault();
 			case LocalStorageKey.WHITELIST:
@@ -264,10 +269,10 @@ class LocalStorageDetail {
 	/**
 	 * コンストラクタ
 	 */
-	public function new(storage:Storage, window:DOMWindow):Void
+	public function new(storageEntity:Storage, window:DOMWindow):Void
 	{
 		Note.log("LocalStorageDetail constractor");
-		this.storage = storage;
+		this.storageEntity = storageEntity;
 		window.addEventListener("storage", window_storageHandler);
 	}
 	
@@ -276,7 +281,7 @@ class LocalStorageDetail {
 	 */
 	public function getVersion():Int
 	{
-		var versionText:String = storage.getItem(LocalStorageKey.VERSION);
+		var versionText:String = storageEntity.getItem(LocalStorageKey.VERSION);
 		if (versionText == null) return -1;
 		return Std.parseInt(versionText);
 	}
@@ -356,6 +361,15 @@ class LocalStorageDetail {
 	}
 	
 	/**
+	 * ブロック解除を終了する
+	 */
+	public function endUnblock():Void
+	{
+		unblockState = createEndUnblockState(Date.now());
+		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
+	}
+	
+	/**
 	 * ブロック解除が終了しないかどうかチェックする
 	 * @return Unblockならtrue
 	 */
@@ -365,23 +379,31 @@ class LocalStorageDetail {
 		var date:Date = Date.now();
 		var endTime:Float = unblockState.switchTime + unblockState.unblockTime;
 		// 終了しているかチェック
-		trace([date.getTime() , endTime]);
 		if (date.getTime() < endTime){
 			return true;	// まだ終了していないなら、trueを返す
 		}
 		// 終了していた場合、終了したのは今ではなく少し前なはずなので、その時間でdateを作り、TotalTimeを計算
 		var endDate:Date = Date.fromTime(endTime);
-		var totalTimeKit:TotalTimeKit = calcTotalTime(endDate);
 		// unblockStateを作る
-		unblockState = new UnblockState();
-		unblockState.isUnblock = false;
-		unblockState.switchTime = endTime;
-		unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
-		unblockState.todayUnblockTotal = totalTimeKit.today;
-		unblockState.unblockTime = -1;
+		unblockState = createEndUnblockState(endDate);
 		flushItem(LocalStorageKey.UNBLOCK_STATE);	// Storageへ反映
 		// 結果を返す
 		return false;
+	}
+	
+	/*
+	 * ブロック解除終了のデータを生成する
+	 */
+	private function createEndUnblockState(endDate:Date):UnblockState
+	{
+		var totalTimeKit:TotalTimeKit = calcTotalTime(endDate);
+		unblockState = new UnblockState();
+		unblockState.isUnblock = false;
+		unblockState.switchTime = endDate.getTime();
+		unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+		unblockState.todayUnblockTotal = totalTimeKit.today;
+		unblockState.unblockTime = -1;
+		return unblockState;
 	}
 	
 	/*

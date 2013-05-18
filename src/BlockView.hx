@@ -114,7 +114,7 @@ class BlockView {
 		targetPage_container.html(targetPageBase.execute(targetPageContext));
 		
 		// ブロック解除
-		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultIndex);
+		unblockTime.draw(localStorageDetail.getUnblockTimeList(), localStorageDetail.unblockTimeDefaultValue);
 		var todayUnblockTotalContext:TodayUnblockTotalContext = {time:StringUtil.timeDisplay(unblockState.todayUnblockTotal, false)};
 		todayUnblockTotal_container.html(todayUnblockTotalBase.execute(todayUnblockTotalContext));
 	

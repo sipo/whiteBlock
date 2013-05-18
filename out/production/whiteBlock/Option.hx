@@ -69,11 +69,4 @@ class Option {
 	 * Viewからの挙動（必要ならController化する
 	 */
 	
-	/**
-	 * ブロック解除開始
-	 */
-	public function startUnblock(unblockTime:Float):Void
-	{
-		localStorageDetail.startUnblock(unblockTime);
-	}
 }

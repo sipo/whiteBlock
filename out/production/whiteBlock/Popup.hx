@@ -66,7 +66,7 @@ class Popup {
 			case LocalStorageKey.VERSION:
 				// 特殊なので値なし
 			case LocalStorageKey.UNBLOCK_TIME_LIST:
-			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX:
+			case LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE:
 			case LocalStorageKey.UNBLOCK_STATE:
 				view.drawUnblockState(false);
 			case LocalStorageKey.WHITELIST:
@@ -99,5 +99,13 @@ class Popup {
 	public function startUnblock(unblockTime:Float):Void
 	{
 		localStorageDetail.startUnblock(unblockTime);
+	}
+	
+	/**
+	 * ブロック解除開始
+	 */
+	public function endUnblock():Void
+	{
+		localStorageDetail.endUnblock();
 	}
 }

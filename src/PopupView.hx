@@ -35,6 +35,8 @@ class PopupView {
 	private var unblockDisplay_switch:JQuery;  // ブロック解除時に表示するエリア
 	private var unblockTimeLeft_text:JQuery; // ブロック解除の残り時間
 	private var endUnblock_clickable:JQuery; // ブロック解除を終了する
+	private var todayUnblockTotal_container:JQuery;     // ブロック解除する時間
+	private var todayUnblockTotalBase:Template;
 	
 	private var laterList_container:JQuery; // あとで見るリスト
 	private var laterKits:Array<LaterKit>; // 追加されたあとで見るリストの１つずつの情報
@@ -123,7 +125,7 @@ class PopupView {
 			}
 			if (full){
 				// ブロック解除時間のリストを描画
-				unblockTime.draw(unblockTimeList, localStorageDetail.unblockTimeDefaultIndex);
+				unblockTime.draw(unblockTimeList, localStorageDetail.unblockTimeDefaultValue);
 			}
 		}else{
 			// ブロック解除中
@@ -165,6 +167,7 @@ class PopupView {
 	private function endUnblock_clickHandler(event:JqEvent):Void
 	{
 		Note.log("endUnblock_clickHandler");
+		popup.endUnblock();
 	}
 	
 	/*

@@ -25,7 +25,7 @@ class UnblockTimeDownList {
 	/**
 	 * 描画
 	 */
-	public function draw(timeList:Array<Float>, defaultIndex:Int):Void
+	public function draw(timeList:Array<Float>, defaultValue:Float):Void
 	{
 		// ブロック解除時間のリストを描画
 		var innerHtml:String = "";
@@ -35,7 +35,7 @@ class UnblockTimeDownList {
 			innerHtml += optionTemplate.execute(context);
 		}
 		dom.html(innerHtml);	// html描画
-		dom.val(Std.string(timeList[defaultIndex]));	// デフォルト選択
+		dom.val(Std.string(defaultValue));	// デフォルト選択
 	}
 	
 	/**
@@ -44,6 +44,22 @@ class UnblockTimeDownList {
 	public function getValue():Float
 	{
 		return Std.parseFloat(dom.val());
+	}
+	
+	/**
+	 * 値の取得
+	 */
+	public function setValue(value:Float):Void
+	{
+		dom.val(Std.string(value));
+	}
+	
+	/**
+	 * 選択コールバック
+	 */
+	public function change(callback:JqEvent -> Void):Void
+	{
+		dom.change(callback);
 	}
 }
 // unblockTimeList[localStorageDetail.unblockTimeDefaultIndex])

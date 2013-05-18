@@ -62,7 +62,7 @@ BlockView.prototype = {
 		this.blockTime_container.html(this.blockTimeBase.execute(blockTimeContext));
 		var targetPageContext = { urlFull : targetPage.url, urlShort : common.StringUtil.limit(targetPage.url,100), title : common.StringUtil.limit(targetPage.title,100)};
 		this.targetPage_container.html(this.targetPageBase.execute(targetPageContext));
-		this.unblockTime.draw(this.localStorageDetail.getUnblockTimeList(),this.localStorageDetail.unblockTimeDefaultIndex);
+		this.unblockTime.draw(this.localStorageDetail.getUnblockTimeList(),this.localStorageDetail.unblockTimeDefaultValue);
 		var todayUnblockTotalContext = { time : common.StringUtil.timeDisplay(unblockState.todayUnblockTotal,false)};
 		this.todayUnblockTotal_container.html(this.todayUnblockTotalBase.execute(todayUnblockTotalContext));
 		var url = targetPage.url;
@@ -410,10 +410,16 @@ common.UnblockTimeDownList = $hxClasses["common.UnblockTimeDownList"] = function
 };
 common.UnblockTimeDownList.__name__ = true;
 common.UnblockTimeDownList.prototype = {
-	getValue: function() {
+	change: function(callback) {
+		this.dom.change(callback);
+	}
+	,setValue: function(value) {
+		this.dom.val(Std.string(value));
+	}
+	,getValue: function() {
 		return Std.parseFloat(this.dom.val());
 	}
-	,draw: function(timeList,defaultIndex) {
+	,draw: function(timeList,defaultValue) {
 		var innerHtml = "";
 		var _g1 = 0, _g = timeList.length;
 		while(_g1 < _g) {
@@ -423,7 +429,7 @@ common.UnblockTimeDownList.prototype = {
 			innerHtml += this.optionTemplate.execute(context);
 		}
 		this.dom.html(innerHtml);
-		this.dom.val(Std.string(timeList[defaultIndex]));
+		this.dom.val(Std.string(defaultValue));
 	}
 	,__class__: common.UnblockTimeDownList
 }
@@ -1287,9 +1293,9 @@ js.Browser.getLocalStorage = function() {
 	}
 }
 var storage = storage || {}
-storage.LocalStorageDetail = $hxClasses["storage.LocalStorageDetail"] = function(storage,window) {
+storage.LocalStorageDetail = $hxClasses["storage.LocalStorageDetail"] = function(storageEntity,window) {
 	Note.log("LocalStorageDetail constractor");
-	this.storage = storage;
+	this.storageEntity = storageEntity;
 	window.addEventListener("storage",$bind(this,this.window_storageHandler));
 };
 storage.LocalStorageDetail.__name__ = true;
@@ -1323,11 +1329,20 @@ storage.LocalStorageDetail.prototype = {
 		}
 		return ans;
 	}
+	,createEndUnblockState: function(endDate) {
+		var totalTimeKit = this.calcTotalTime(endDate);
+		this.unblockState = new storage.UnblockState();
+		this.unblockState.isUnblock = false;
+		this.unblockState.switchTime = endDate.getTime();
+		this.unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
+		this.unblockState.todayUnblockTotal = totalTimeKit.today;
+		this.unblockState.unblockTime = -1;
+		return this.unblockState;
+	}
 	,checkUnblock: function() {
 		if(!this.unblockState.isUnblock) return false;
 		var date = new Date();
 		var endTime = this.unblockState.switchTime + this.unblockState.unblockTime;
-		console.log([date.getTime(),endTime]);
 		if(date.getTime() < endTime) return true;
 		var endDate = (function($this) {
 			var $r;
@@ -1336,15 +1351,13 @@ storage.LocalStorageDetail.prototype = {
 			$r = d;
 			return $r;
 		}(this));
-		var totalTimeKit = this.calcTotalTime(endDate);
-		this.unblockState = new storage.UnblockState();
-		this.unblockState.isUnblock = false;
-		this.unblockState.switchTime = endTime;
-		this.unblockState.yesterdayUnblockTotal = totalTimeKit.yesterday;
-		this.unblockState.todayUnblockTotal = totalTimeKit.today;
-		this.unblockState.unblockTime = -1;
+		this.unblockState = this.createEndUnblockState(endDate);
 		this.flushItem("unblockState");
 		return false;
+	}
+	,endUnblock: function() {
+		this.unblockState = this.createEndUnblockState(new Date());
+		this.flushItem("unblockState");
 	}
 	,startUnblock: function(unblockTime) {
 		var date = new Date();
@@ -1395,7 +1408,7 @@ storage.LocalStorageDetail.prototype = {
 		}
 	}
 	,getVersion: function() {
-		var versionText = this.storage.getItem("version");
+		var versionText = this.storageEntity.getItem("version");
 		if(versionText == null) return -1;
 		return Std.parseInt(versionText);
 	}
@@ -1407,7 +1420,7 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockTimeList = [180000,300000,600000,1200000,1800000,3600000];
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultIndex = 2;
+			this.unblockTimeDefaultValue = this.unblockTimeList[1];
 			break;
 		case "unblockState":
 			this.unblockState = storage.UnblockState.createDefault();
@@ -1433,16 +1446,16 @@ storage.LocalStorageDetail.prototype = {
 		this.flushItem(key);
 	}
 	,getObject: function(key) {
-		return haxe.Json.parse(this.storage.getItem(key));
+		return haxe.Json.parse(this.storageEntity.getItem(key));
 	}
 	,getArrayBool: function(key) {
-		return this.storage.getItem(key) == "true";
+		return this.storageEntity.getItem(key) == "true";
 	}
 	,getArrayString: function(key) {
-		return haxe.Json.parse(this.storage.getItem(key));
+		return haxe.Json.parse(this.storageEntity.getItem(key));
 	}
 	,getArrayFloat: function(key) {
-		var list = haxe.Json.parse(this.storage.getItem(key));
+		var list = haxe.Json.parse(this.storageEntity.getItem(key));
 		return (function($this) {
 			var $r;
 			var _g = [];
@@ -1466,10 +1479,10 @@ storage.LocalStorageDetail.prototype = {
 			this.unblockTimeList = this.getArrayFloat(key);
 			break;
 		case "unblockTimeDefaultIndex":
-			this.unblockTimeDefaultIndex = Std.parseInt(this.storage.getItem(key));
+			this.unblockTimeDefaultValue = Std.parseFloat(this.storageEntity.getItem(key));
 			break;
 		case "unblockState":
-			this.unblockState = storage.UnblockState.createFromJson(this.storage.getItem(key));
+			this.unblockState = storage.UnblockState.createFromJson(this.storageEntity.getItem(key));
 			break;
 		case "whitelist":
 			this.whitelist = this.getArrayString(key);
@@ -1490,14 +1503,17 @@ storage.LocalStorageDetail.prototype = {
 			throw "対応していない値です key=" + key;
 		}
 	}
+	,setFloatItem: function(key,value) {
+		this.storageEntity.setItem(key,Std.string(value));
+	}
 	,setIntItem: function(key,value) {
-		this.storage.setItem(key,Std.string(this.unblockTimeDefaultIndex));
+		this.storageEntity.setItem(key,Std.string(value));
 	}
 	,setBoolItem: function(key,value) {
-		this.storage.setItem(key,value?"true":"false");
+		this.storageEntity.setItem(key,value?"true":"false");
 	}
 	,setJsonItem: function(key,value) {
-		this.storage.setItem(key,haxe.Json.stringify(value));
+		this.storageEntity.setItem(key,haxe.Json.stringify(value));
 	}
 	,flushItem: function(key) {
 		Note.log("flushItem " + key);
@@ -1509,7 +1525,7 @@ storage.LocalStorageDetail.prototype = {
 			this.setJsonItem(key,this.unblockTimeList);
 			break;
 		case "unblockTimeDefaultIndex":
-			this.setIntItem(key,this.unblockTimeDefaultIndex);
+			this.setFloatItem(key,this.unblockTimeDefaultValue);
 			break;
 		case "unblockState":
 			this.setJsonItem(key,this.unblockState);
@@ -1578,9 +1594,9 @@ storage.LocalStorageDetail.prototype = {
 		return this.unblockState.clone();
 	}
 	,setUnblockTimeDefaultIndex: function(value) {
-		this.unblockTimeDefaultIndex = value;
+		this.unblockTimeDefaultValue = value;
 		this.flushItem("unblockTimeDefaultIndex");
-		return this.unblockTimeDefaultIndex;
+		return this.unblockTimeDefaultValue;
 	}
 	,setUnblockTimeList: function(value) {
 		this.unblockTimeList = value;
@@ -1713,7 +1729,7 @@ js.Browser.window = typeof window != "undefined" ? window : null;
 storage.LocalStorageDetail.STORAGE_VERSION = 1;
 storage.LocalStorageKey.VERSION = "version";
 storage.LocalStorageKey.UNBLOCK_TIME_LIST = "unblockTimeList";
-storage.LocalStorageKey.UNBLOCK_TIME_DEFAULT_INDEX = "unblockTimeDefaultIndex";
+storage.LocalStorageKey.UNBLOCK_TIME_DEFAULT_VALUE = "unblockTimeDefaultIndex";
 storage.LocalStorageKey.UNBLOCK_STATE = "unblockState";
 storage.LocalStorageKey.WHITELIST = "whitelist";
 storage.LocalStorageKey.WHITELIST_USE_REGEXP = "whitelistUseRegexp";

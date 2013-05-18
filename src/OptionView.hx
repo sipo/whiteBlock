@@ -14,6 +14,14 @@ class OptionView {
 	/* データ本体。ここで操作したらダメ（本来は依存を消すべきだけど、とりあえず規約で止める） */
 	private var localStorageDetail:LocalStorageDetail;
 	
+	/* 最後に選択されたデフォルト値が示すアンブロック時間。一致するものがあれば、プルダウン選択は優先的にそこへ移動する */
+	private var lastUnblockTimeDefaultValue:Float;
+	
+	private static inline var MINUTE_TIME:Float = 1000 * 60;
+	private static inline var CHECKBOX_ATTR:String = "checked";
+	private static inline var TEXTAREA_ROWS_ATTR:String = "rows";
+	private static inline var TEXTAREA_ROWS_MIN:Int = 5;
+	private static inline var TEXTAREA_ROWS_MAX:Int = 20;
 	
 	/* --------------------------------
 	 * パーツ（JQueryは対象の種類情報が消失するため、変数に種類情報を付与）
@@ -48,9 +56,8 @@ class OptionView {
 	 */
 	public function initialize()
 	{
-		trace("optionView initialize");
+		Note.log("optionView initialize");
 		// 必要変数
-		
 		
 		unblockTimeList_textArea = new JQuery("#unblockTimeList");
 		unblockTimeDefaultIndex = new UnblockTimeDownList(new JQuery("#unblockTimeDefaultIndex"));
@@ -59,6 +66,10 @@ class OptionView {
 		blacklist_textArea = new JQuery("#blacklist");
 		blacklistUseRegexp_checkbox = new JQuery("#blacklistUseRegexp");
 		save_clickable = new JQuery("#save");
+		
+		unblockTimeDefaultIndex.change(unblockTimeDefaultIndex_changeHandler);
+		
+		drawConfig();
 	}
 	
 	
@@ -72,8 +83,42 @@ class OptionView {
 	 */
 	public function drawConfig():Void
 	{
+		var unblockTimeList = localStorageDetail.getUnblockTimeList();
+		var unblockTimeMinuteList:Array<Float> = [];
+		for (i in 0...unblockTimeList.length) {
+			var minute:Float = unblockTimeList[i] / MINUTE_TIME;
+			unblockTimeMinuteList.push(minute);
+		}
+		unblockTimeList_textArea.val(unblockTimeMinuteList.join("\n"));
 		
+		lastUnblockTimeDefaultValue = localStorageDetail.unblockTimeDefaultValue;
 		drawUnblockTimeDefault();
+		
+		drawListTextArea(whitelist_textArea, localStorageDetail.getWhitelist());
+		
+		drawCheckbox(whitelistUseRegexp_checkbox, localStorageDetail.whitelistUseRegexp);
+		
+		drawListTextArea(blacklist_textArea, localStorageDetail.getBlacklist());
+		
+		drawCheckbox(blacklistUseRegexp_checkbox, localStorageDetail.blacklistUseRegexp);
+	}
+	/*
+	 * リスト表示の描画
+	 */
+	private function drawListTextArea(textArea:JQuery, list:Array<String>):Void
+	{
+		textArea.val(list.join("\n"));
+		var rows:Int = list.length + 1;
+		rows = if (rows < TEXTAREA_ROWS_MIN) TEXTAREA_ROWS_MIN else if (TEXTAREA_ROWS_MAX < rows) TEXTAREA_ROWS_MAX else rows;
+		textArea.attr(TEXTAREA_ROWS_ATTR, Std.string(rows));
+	}
+	/*
+	 * チェックボックスの描画
+	 */
+	private function drawCheckbox(checkbox:JQuery, value:Bool):Void
+	{
+		if (value) checkbox.attr(CHECKBOX_ATTR, CHECKBOX_ATTR);
+		else checkbox.removeAttr(CHECKBOX_ATTR);
 	}
 	
 	/**
@@ -81,7 +126,21 @@ class OptionView {
 	 */
 	public function drawUnblockTimeDefault():Void
 	{
-		
+		var unblockTimeList_textAreaValue:String = unblockTimeList_textArea.val();
+		unblockTimeList_textAreaValue = new EReg("(\r\n)|(\r)", "g").replace(unblockTimeList_textAreaValue, "\n");
+		var unblockMinutesString:Array<String> = unblockTimeList_textArea.val().split("\n");
+		// 時間リストの生成
+		var timeList:Array<Float> = [];
+		for (i in 0...unblockMinutesString.length) {
+			var minute:Float = Std.parseFloat(unblockMinutesString[i]);
+			if (Math.isNaN(minute)){
+				timeList.push(0);
+				continue;
+			}			
+			timeList.push(minute * MINUTE_TIME);
+		}
+		// 描画
+		unblockTimeDefaultIndex.draw(timeList, lastUnblockTimeDefaultValue);
 	}
 	
 	/* ================================================================
@@ -94,6 +153,16 @@ class OptionView {
 	private function unblockTimeList_changeHandler(event:JqEvent):Void
 	{
 		Note.log("unblockTimeList_changeHandler");
+		drawUnblockTimeDefault();
+	}
+	
+	/*
+	 * ブロック解除時間デフォルト選択の変更
+	 */
+	private function unblockTimeDefaultIndex_changeHandler(event:JqEvent):Void
+	{
+		Note.log("unblockTimeList_changeHandler");
+		lastUnblockTimeDefaultValue = unblockTimeDefaultIndex.getValue();
 	}
 	
 	/*

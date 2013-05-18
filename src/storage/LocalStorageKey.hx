@@ -2,7 +2,7 @@ package storage;
 class LocalStorageKey {
 	public static inline var VERSION:String = "version";
 	public static inline var UNBLOCK_TIME_LIST:String = "unblockTimeList";
-	public static inline var UNBLOCK_TIME_DEFAULT_INDEX:String = "unblockTimeDefaultIndex";
+	public static inline var UNBLOCK_TIME_DEFAULT_VALUE:String = "unblockTimeDefaultIndex";
 	public static inline var UNBLOCK_STATE:String = "unblockState";
 	public static inline var WHITELIST:String = "whitelist";
 	public static inline var WHITELIST_USE_REGEXP:String = "whitelistUseRegexp";
@@ -14,7 +14,7 @@ class LocalStorageKey {
 		return [
 			VERSION,
 			UNBLOCK_TIME_LIST,
-			UNBLOCK_TIME_DEFAULT_INDEX,
+			UNBLOCK_TIME_DEFAULT_VALUE,
 			UNBLOCK_STATE,
 			WHITELIST,
 			WHITELIST_USE_REGEXP,
