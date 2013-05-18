@@ -26,7 +26,7 @@ class Background
 	private var localStorageDetail:LocalStorageDetail;
 	
 	/** 必ずデータをクリアするデバッグ挙動 */
-	public static inline var DEBUG_CLEAR_DATA:Bool = true;
+	public static inline var DEBUG_CLEAR_DATA:Bool = false;
 	
 	/**
 	 * 起点

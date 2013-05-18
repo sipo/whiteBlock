@@ -1,7 +1,7 @@
 var $hxClasses = $hxClasses || {},$estr = function() { return js.Boot.__string_rec(this,''); };
 var Background = $hxClasses["Background"] = function() {
 	var factory = new storage.LocalStorageFactory();
-	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),true);
+	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updatedHandler));
 	js.Browser.window.setInterval($bind(this,this.window_timeoutHandler),1000);
 };
@@ -1249,7 +1249,7 @@ var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
-Background.DEBUG_CLEAR_DATA = true;
+Background.DEBUG_CLEAR_DATA = false;
 common.RequestParams.TITLE = "title";
 common.RequestParams.URL = "url";
 common.StringUtil.DOT_NUM = 3;
