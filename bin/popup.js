@@ -209,13 +209,15 @@ PopupView.prototype = {
 	,drawLaterList: function() {
 		var _g2 = this;
 		Note.log("drawLaterList");
-		this.laterList_container.html("");
-		if(!this.localStorageDetail.getUnblockState().isUnblock) {
-			this.laterListBlockMessage_switch.show();
-			return;
-		} else this.laterListBlockMessage_switch.hide();
 		var laterList = this.localStorageDetail.getLaterList();
 		Note.log("laterList = " + Std.string(laterList));
+		if(!this.localStorageDetail.getUnblockState().isUnblock) {
+			var laterListBlockMessageContext = { num : laterList.length};
+			this.laterListBlockMessage_switch.show();
+			this.laterListBlockMessage_switch.html(this.laterListBlockMessageBase.execute(laterListBlockMessageContext));
+			return;
+		} else this.laterListBlockMessage_switch.hide();
+		this.laterList_container.html("");
 		var _g1 = 0, _g = laterList.length;
 		while(_g1 < _g) {
 			var i = [_g1++];
@@ -286,6 +288,8 @@ PopupView.prototype = {
 		this.laterList_container.html("");
 		this.totalDisplayBase = new haxe.Template(this.totalDisplay_container.html());
 		this.totalDisplay_container.html("");
+		this.laterListBlockMessageBase = new haxe.Template(this.laterListBlockMessage_switch.html());
+		this.laterListBlockMessage_switch.html("");
 		this.unblock_clickable.click($bind(this,this.unblock_clickHandler));
 		this.endUnblock_clickable.click($bind(this,this.endUnblock_clickHandler));
 	}

@@ -23,6 +23,9 @@ private typedef TotalDisplayContext = {
 	yesterdayBlockTotal:String,
 	todayBlockTotal:String
 }
+private typedef LaterListBlockMessageContext = {
+	num:Int
+}
 class PopupView {
 	
 	
@@ -52,6 +55,7 @@ class PopupView {
 	private var todayUnblockTotalBase:Template;
 	
 	private var laterListBlockMessage_switch:JQuery;
+	private var laterListBlockMessageBase:Template;
 	private var laterList_container:JQuery; // あとで見るリスト
 	private var laterKits:Array<LaterKit>; // 追加されたあとで見るリストの１つずつの情報
 	
@@ -113,6 +117,8 @@ class PopupView {
 		laterList_container.html("");
 		totalDisplayBase = new Template(totalDisplay_container.html());
 		totalDisplay_container.html("");
+		laterListBlockMessageBase = new Template(laterListBlockMessage_switch.html());
+		laterListBlockMessage_switch.html("");
 		
 		// イベントの登録
 		unblock_clickable.click(unblock_clickHandler);
@@ -172,15 +178,18 @@ class PopupView {
 	public function drawLaterList():Void
 	{
 		Note.log("drawLaterList");
-		laterList_container.html("");	// 一度クリア
+		var laterList:Array<Page> = localStorageDetail.getLaterList();
+		Note.log("laterList = " + laterList);
 		if (!localStorageDetail.getUnblockState().isUnblock){
+			var laterListBlockMessageContext:LaterListBlockMessageContext = {num:laterList.length};
 			laterListBlockMessage_switch.show();
+			laterListBlockMessage_switch.html(laterListBlockMessageBase.execute(laterListBlockMessageContext));
+			
 			return;	// 以下の処理をカット
 		}else{
 			laterListBlockMessage_switch.hide();
 		}
-		var laterList:Array<Page> = localStorageDetail.getLaterList();
-		Note.log("laterList = " + laterList);
+		laterList_container.html("");	// 一度クリア
 		for (i in 0...laterList.length) {
 			// htmlを配置
 			var page = laterList[i];

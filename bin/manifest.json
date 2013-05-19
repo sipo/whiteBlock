@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "WhiteBlock",
     "description": "いかに解除するかを重視した、Webサーフィンブロックツール",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "browser_action": {
         "default_icon": "./icon/icon_19.png",
         "default_title": "WhiteBlock",
