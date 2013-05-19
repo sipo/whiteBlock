@@ -122,7 +122,11 @@ Option.main = function() {
 	Option.option = new Option();
 }
 Option.prototype = {
-	save: function(data) {
+	'delete': function() {
+		this.localStorageDetail.createAllDefault();
+		this.view.drawConfig();
+	}
+	,save: function(data) {
 		this.localStorageDetail.setUnblockTimeList(data.unblockTimeList);
 		this.localStorageDetail.setUnblockTimeDefaultIndex(data.unblockTimeDefaultValue);
 		this.localStorageDetail.setWhitelist(data.whitelist);
@@ -136,6 +140,7 @@ Option.prototype = {
 	}
 	,document_readyHandler: function(event) {
 		this.view.initialize();
+		this.view.drawConfig();
 	}
 	,__class__: Option
 }
@@ -156,6 +161,10 @@ OptionView.prototype = {
 		if(!this.anyChange) return;
 		event.returnValue = 'ページから移動しますか？';
 		return event;
+	}
+	,delete_clickHandler: function(event) {
+		if(js.Browser.window.confirm("設定やブロック時間の記録などを全て消し、デフォルトに戻します")) this.option["delete"](); else {
+		}
 	}
 	,checkboxToBool: function(checkbox) {
 		return checkbox["is"](":" + "checked");
@@ -247,6 +256,7 @@ OptionView.prototype = {
 		this.drawCheckbox(this.whitelistUseRegexp_checkbox,this.localStorageDetail.whitelistUseRegexp);
 		this.drawListTextArea(this.blacklist_textArea,this.localStorageDetail.getBlacklist());
 		this.drawCheckbox(this.blacklistUseRegexp_checkbox,this.localStorageDetail.blacklistUseRegexp);
+		this.switchChange(false);
 	}
 	,initialize: function() {
 		Note.log("optionView initialize");
@@ -257,6 +267,7 @@ OptionView.prototype = {
 		this.blacklist_textArea = new js.JQuery("#blacklist");
 		this.blacklistUseRegexp_checkbox = new js.JQuery("#blacklistUseRegexp");
 		this.save_clickable = new js.JQuery("#save");
+		this.delete_clickable = new js.JQuery("#delete");
 		this.unblockTimeList_textArea.keyup($bind(this,this.unblockTimeList_changeHandler));
 		this.unblockTimeList_textArea.change($bind(this,this.unblockTimeList_changeHandler));
 		this.unblockTimeDefaultIndex.change($bind(this,this.unblockTimeDefaultIndex_changeHandler));
@@ -267,11 +278,7 @@ OptionView.prototype = {
 		this.blacklist_textArea.change($bind(this,this.any_changeHandler));
 		this.blacklistUseRegexp_checkbox.change($bind(this,this.any_changeHandler));
 		this.save_clickable.click($bind(this,this.save_clickHandler));
-		console.log($bind(this,this.window_unloadHandler));
-		console.log(this.anyChange);
-		window.onbeforeunload = this.window_unloadHandler;
-		this.drawConfig();
-		this.switchChange(false);
+		this.delete_clickable.click($bind(this,this.delete_clickHandler));
 	}
 	,__class__: OptionView
 }

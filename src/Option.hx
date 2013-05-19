@@ -57,6 +57,7 @@ class Option {
 	private function document_readyHandler(event:JqEvent):Void
 	{
 		view.initialize();
+		view.drawConfig();
 	}
 	
 	/*
@@ -88,5 +89,14 @@ class Option {
 		localStorageDetail.setWhitelistUseRegexp(data.whitelistUseRegexp);
 		localStorageDetail.setBlacklist(data.blacklist);
 		localStorageDetail.setBlacklistUseRegexp(data.blacklistUseRegexp);
+	}
+	
+	/*
+	 * データの削除
+	 */
+	public function delete():Void
+	{
+		localStorageDetail.createAllDefault();
+		view.drawConfig();
 	}
 }

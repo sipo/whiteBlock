@@ -45,6 +45,8 @@ class OptionView {
 	
 	private var save_clickable:JQuery; // セーブボタン
 	
+	private var delete_clickable:JQuery; // 削除ボタン
+	
 	
 	
 	/* ================================================================
@@ -75,6 +77,7 @@ class OptionView {
 		blacklist_textArea = new JQuery("#blacklist");
 		blacklistUseRegexp_checkbox = new JQuery("#blacklistUseRegexp");
 		save_clickable = new JQuery("#save");
+		delete_clickable = new JQuery("#delete");
 		
 		// イベント
 		unblockTimeList_textArea.keyup(unblockTimeList_changeHandler);	// inputイベントとか無いのー？
@@ -87,12 +90,11 @@ class OptionView {
 		blacklist_textArea.change(any_changeHandler);
 		blacklistUseRegexp_checkbox.change(any_changeHandler);
 		save_clickable.click(save_clickHandler);
+		delete_clickable.click(delete_clickHandler);
 		
 //		var body:BodyElement = cast(new JQuery("body").get()[0], BodyElement);
 //		body.onbeforeunload = window_unloadHandler; // うーん、動かない・・・まあいいか
 		
-		drawConfig();
-		switchChange(false);
 	}
 	
 	
@@ -125,6 +127,7 @@ class OptionView {
 		
 		drawCheckbox(blacklistUseRegexp_checkbox, localStorageDetail.blacklistUseRegexp);
 		
+		switchChange(false);
 	}
 	/*
 	 * リスト表示の描画
@@ -247,6 +250,19 @@ class OptionView {
 		return checkbox.is(":" + CHECKBOX_ATTR);	// JQueryのクソキモいところ。
 	}
 	
+	/*
+	 * 削除ボタンのクリック
+	 */
+	private function delete_clickHandler(event:JqEvent):Void
+	{
+		if (Browser.window.confirm("設定やブロック時間の記録などを全て消し、デフォルトに戻します")){
+			option.delete();
+		}else{
+			
+		}
+	}
+
+
 	/*
 	 * 画面のアンロード時の処理
 	 * 変更があったら注意する　※なんか動かん！
