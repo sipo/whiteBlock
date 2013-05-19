@@ -15,11 +15,11 @@ Block.main = function() {
 Block.prototype = {
 	addWhiteList: function(url) {
 		this.localStorageDetail.addWhitelist(url);
-		js.Browser.window.history.go(-2);
+		js.Browser.window.history.go(-1);
 	}
 	,startUnblock: function(unblockTime) {
 		this.localStorageDetail.startUnblock(unblockTime);
-		js.Browser.window.history.go(-2);
+		js.Browser.window.history.go(-1);
 	}
 	,addLaterList: function() {
 		this.localStorageDetail.addLaterList(this.targetPage.clone());
@@ -1710,7 +1710,7 @@ var Enum = { };
 if(typeof(JSON) != "undefined") haxe.Json = JSON;
 var q = window.jQuery;
 js.JQuery = q;
-Block.HISTORY_BACK_NUM = -2;
+Block.HISTORY_BACK_NUM = -1;
 BlockView.ADD_WHITELIST_TEXT_MAX_SIZE = 100;
 BlockView.URL_LIMIT = 100;
 BlockView.TITLE_LIMIT = 100;

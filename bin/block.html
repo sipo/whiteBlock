@@ -15,14 +15,14 @@
             <p>
                 <label for="unblockTime">解除する時間</label>
                 <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
-                <strong><a href="#" id="unblock">解除する</a></strong><!-- ここの href="#" を消す場合は、Block.hxのHISTORY_BACK_NUMを-1にする -->
+                <strong><a href="javascript:void(0);" id="unblock">解除する</a></strong>
             </p>
             <p id="blockTime"><small>最後に解除したのは::time::前です</small></p>
             <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
         </section>
         <section>
             <h1>あとで見るリストに追加する</h1>
-            <p><a href="#" id="addLaterList">追加する</a></p>
+            <p><a href="javascript:void(0);" id="addLaterList">追加する</a></p>
             <p id="addLaterListComplete">追加しました<!-- [<a href="#" id="addLaterListClose">閉じる</a>]--></p>
             <p><small>ヒント：仕事中はこちらを使いましょう。拡張機能のアイコンをクリックすると追加したリストを確認できます。</small></p>
         </section>
@@ -31,7 +31,7 @@
             <p>
                 <label for="addWhitelistText">追加する文字列</label>
                 <input type="text" id="addWhitelistText" value="">
-                <a href="#" id="addWhiteList">追加する</a>
+                <a href="javascript:void(0);" id="addWhiteList">追加する</a>
             </p>
             <p><small>ヒント：ホワイトリストへの追加は慎重にしましょう。業務で何度も使用するようなページ以外は、「少しだけブロックを解除する」を利用するほうがいいでしょう。</small></p>
         </section>

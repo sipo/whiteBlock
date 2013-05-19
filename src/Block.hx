@@ -27,7 +27,7 @@ class Block
 	private var view:BlockView;
 	
 	/** 解除後に遷移する数。href="#"なら-2、それ以外なら-1でいいはず */
-	private static inline var HISTORY_BACK_NUM:Int = -2;
+	private static inline var HISTORY_BACK_NUM:Int = -1;
 	
 	/* ================================================================
 	 * 基本処理
