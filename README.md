@@ -1,4 +1,8 @@
 whiteBlock
+
+[https://chrome.google.com/webstore/detail/whiteblock/pciepehkbpgmnokkajgcgaibjgjbdcjg](https://chrome.google.com/webstore/detail/whiteblock/pciepehkbpgmnokkajgcgaibjgjbdcjg)
+ここでテスト版を公開
+
 ==========
 #入れたい機能
 
