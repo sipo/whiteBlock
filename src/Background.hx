@@ -1,4 +1,5 @@
 package ;
+import chrome.MessageSender;
 import common.StringUtil;
 import storage.UnblockState;
 import chrome.BrowserAction;
@@ -47,6 +48,8 @@ class Background
 		Tabs.onUpdated.addListener(tab_updatedHandler);
 		// 繰り返し処理イベント登録
 		Browser.window.setInterval(window_timeoutHandler, 1000);
+		// メッセージ受け取り
+		Extension.onRequest.addListener(request);
 	}
 	
 	/*
@@ -154,6 +157,17 @@ class Background
 	{
 		trace("afterBlock");
 //		Tabs.sendMessage(tab.id, {}, blockCallback);
+	}
+	
+	/*
+	 * コンテンツスクリプトからのリクエスト
+	 */
+	private function request(request:Dynamic, sender:MessageSender, sendResponse:Dynamic->Void):Void
+	{
+		trace("request");
+		trace(sender.tab);
+		if (request.greeting == "hello") sendResponse({farewell: "goodbye"});
+		else sendResponse({});
 	}
 	
 	/**

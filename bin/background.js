@@ -4,6 +4,7 @@ var Background = $hxClasses["Background"] = function() {
 	this.localStorageDetail = factory.create($bind(this,this.storage_changeHandler),false);
 	chrome.tabs.onUpdated.addListener($bind(this,this.tab_updatedHandler));
 	js.Browser.window.setInterval($bind(this,this.window_timeoutHandler),1000);
+	chrome.extension.onRequest.addListener($bind(this,this.request));
 };
 Background.__name__ = true;
 Background.main = function() {
@@ -18,6 +19,11 @@ Background.prototype = {
 		var unblockState = this.localStorageDetail.getUnblockState();
 		var time = unblockState.unblockTime + unblockState.switchTime - date.getTime();
 		chrome.browserAction.setBadgeText({ text : common.StringUtil.timeDisplayMinutes(time)});
+	}
+	,request: function(request,sender,sendResponse) {
+		console.log("request");
+		console.log(sender.tab);
+		if(request.greeting == "hello") sendResponse({ farewell : "goodbye"}); else sendResponse({ });
 	}
 	,afterBlock: function(tab) {
 		console.log("afterBlock");

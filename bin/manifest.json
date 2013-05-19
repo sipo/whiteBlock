@@ -20,6 +20,12 @@
     "background": {
         "page":"./background.html"
     },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["content.js"]
+        }
+    ],
     "options_page": "./option.html",
     "web_accessible_resources": [ "./block.html"]
 }
