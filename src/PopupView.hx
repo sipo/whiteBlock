@@ -180,6 +180,8 @@ class PopupView {
 		Note.log("drawLaterList");
 		var laterList:Array<Page> = localStorageDetail.getLaterList();
 		Note.log("laterList = " + laterList);
+		laterList_container.html("");	// 一度クリア
+		
 		if (!localStorageDetail.getUnblockState().isUnblock){
 			var laterListBlockMessageContext:LaterListBlockMessageContext = {num:laterList.length};
 			laterListBlockMessage_switch.show();
@@ -189,7 +191,6 @@ class PopupView {
 		}else{
 			laterListBlockMessage_switch.hide();
 		}
-		laterList_container.html("");	// 一度クリア
 		for (i in 0...laterList.length) {
 			// htmlを配置
 			var page = laterList[i];

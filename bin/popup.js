@@ -211,13 +211,13 @@ PopupView.prototype = {
 		Note.log("drawLaterList");
 		var laterList = this.localStorageDetail.getLaterList();
 		Note.log("laterList = " + Std.string(laterList));
+		this.laterList_container.html("");
 		if(!this.localStorageDetail.getUnblockState().isUnblock) {
 			var laterListBlockMessageContext = { num : laterList.length};
 			this.laterListBlockMessage_switch.show();
 			this.laterListBlockMessage_switch.html(this.laterListBlockMessageBase.execute(laterListBlockMessageContext));
 			return;
 		} else this.laterListBlockMessage_switch.hide();
-		this.laterList_container.html("");
 		var _g1 = 0, _g = laterList.length;
 		while(_g1 < _g) {
 			var i = [_g1++];
