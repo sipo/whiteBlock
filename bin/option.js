@@ -98,6 +98,8 @@ List.prototype = {
 	}
 	,__class__: List
 }
+var IMap = function() { }
+IMap.__name__ = true;
 var Note = function() {
 };
 Note.__name__ = true;
@@ -300,7 +302,7 @@ Reflect.fields = function(o) {
 	if(o != null) {
 		var hasOwnProperty = Object.prototype.hasOwnProperty;
 		for( var f in o ) {
-		if(f != "__id__" && hasOwnProperty.call(o,f)) a.push(f);
+		if(f != "__id__" && f != "hx__closures__" && hasOwnProperty.call(o,f)) a.push(f);
 		}
 	}
 	return a;
@@ -747,8 +749,8 @@ haxe.Json.prototype = {
 			this.buf.b += "\"<fun>\"";
 			break;
 		case 6:
-			var _g_eTClass_0 = $e[2];
-			if(_g_eTClass_0 == String) this.quote(v); else if(_g_eTClass_0 == Array) {
+			var c = $e[2];
+			if(c == String) this.quote(v); else if(c == Array) {
 				var v1 = v;
 				this.buf.b += "[";
 				var len = v1.length;
@@ -761,7 +763,7 @@ haxe.Json.prototype = {
 					}
 				}
 				this.buf.b += "]";
-			} else if(_g_eTClass_0 == haxe.ds.StringMap) {
+			} else if(c == haxe.ds.StringMap) {
 				var v1 = v;
 				var o = { };
 				var $it0 = v1.keys();
@@ -833,43 +835,43 @@ haxe.Template.prototype = {
 		var $e = (e);
 		switch( $e[1] ) {
 		case 0:
-			var e_eOpVar_0 = $e[2];
-			this.buf.b += Std.string(Std.string(this.resolve(e_eOpVar_0)));
+			var v = $e[2];
+			this.buf.b += Std.string(Std.string(this.resolve(v)));
 			break;
 		case 1:
-			var e_eOpExpr_0 = $e[2];
-			this.buf.b += Std.string(Std.string(e_eOpExpr_0()));
+			var e1 = $e[2];
+			this.buf.b += Std.string(Std.string(e1()));
 			break;
 		case 2:
-			var e_eOpIf_2 = $e[4], e_eOpIf_1 = $e[3], e_eOpIf_0 = $e[2];
-			var v = e_eOpIf_0();
+			var eelse = $e[4], eif = $e[3], e1 = $e[2];
+			var v = e1();
 			if(v == null || v == false) {
-				if(e_eOpIf_2 != null) this.run(e_eOpIf_2);
-			} else this.run(e_eOpIf_1);
+				if(eelse != null) this.run(eelse);
+			} else this.run(eif);
 			break;
 		case 3:
-			var e_eOpStr_0 = $e[2];
-			this.buf.b += Std.string(e_eOpStr_0);
+			var str = $e[2];
+			this.buf.b += Std.string(str);
 			break;
 		case 4:
-			var e_eOpBlock_0 = $e[2];
-			var $it0 = e_eOpBlock_0.iterator();
+			var l = $e[2];
+			var $it0 = l.iterator();
 			while( $it0.hasNext() ) {
 				var e1 = $it0.next();
 				this.run(e1);
 			}
 			break;
 		case 5:
-			var e_eOpForeach_1 = $e[3], e_eOpForeach_0 = $e[2];
-			var v = e_eOpForeach_0();
+			var loop = $e[3], e1 = $e[2];
+			var v = e1();
 			try {
 				var x = $iterator(v)();
 				if(x.hasNext == null) throw null;
 				v = x;
-			} catch( e1 ) {
+			} catch( e2 ) {
 				try {
 					if(v.hasNext == null) throw null;
-				} catch( e2 ) {
+				} catch( e3 ) {
 					throw "Cannot iter on " + Std.string(v);
 				}
 			}
@@ -878,24 +880,24 @@ haxe.Template.prototype = {
 			while( v1.hasNext() ) {
 				var ctx = v1.next();
 				this.context = ctx;
-				this.run(e_eOpForeach_1);
+				this.run(loop);
 			}
 			this.context = this.stack.pop();
 			break;
 		case 6:
-			var e_eOpMacro_1 = $e[3], e_eOpMacro_0 = $e[2];
-			var v = Reflect.field(this.macros,e_eOpMacro_0);
+			var params = $e[3], m = $e[2];
+			var v = Reflect.field(this.macros,m);
 			var pl = new Array();
 			var old = this.buf;
 			pl.push($bind(this,this.resolve));
-			var $it1 = e_eOpMacro_1.iterator();
+			var $it1 = params.iterator();
 			while( $it1.hasNext() ) {
 				var p = $it1.next();
 				var $e = (p);
 				switch( $e[1] ) {
 				case 0:
-					var p_eOpVar_0 = $e[2];
-					pl.push(this.resolve(p_eOpVar_0));
+					var v1 = $e[2];
+					pl.push(this.resolve(v1));
 					break;
 				default:
 					this.buf = new StringBuf();
@@ -916,7 +918,7 @@ haxe.Template.prototype = {
 					}
 					return $r;
 				}(this));
-				var msg = "Macro call " + e_eOpMacro_0 + "(" + plstr + ") failed (" + Std.string(e1) + ")";
+				var msg = "Macro call " + m + "(" + plstr + ") failed (" + Std.string(e1) + ")";
 				throw msg;
 			}
 			break;
@@ -1196,6 +1198,7 @@ haxe.Template.prototype = {
 if(!haxe.ds) haxe.ds = {}
 haxe.ds.StringMap = function() { }
 haxe.ds.StringMap.__name__ = true;
+haxe.ds.StringMap.__interfaces__ = [IMap];
 haxe.ds.StringMap.prototype = {
 	keys: function() {
 		var a = [];
@@ -1293,30 +1296,30 @@ js.Boot.__interfLoop = function(cc,cl) {
 	return js.Boot.__interfLoop(cc.__super__,cl);
 }
 js.Boot.__instanceof = function(o,cl) {
-	try {
-		if(o instanceof cl) {
-			if(cl == Array) return o.__enum__ == null;
-			return true;
-		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
-	} catch( e ) {
-		if(cl == null) return false;
-	}
+	if(cl == null) return false;
 	switch(cl) {
 	case Int:
-		return Math.ceil(o%2147483648.0) === o;
+		return (o|0) === o;
 	case Float:
 		return typeof(o) == "number";
 	case Bool:
-		return o === true || o === false;
+		return typeof(o) == "boolean";
 	case String:
 		return typeof(o) == "string";
 	case Dynamic:
 		return true;
 	default:
-		if(o == null) return false;
-		if(cl == Class && o.__name__ != null) return true; else null;
-		if(cl == Enum && o.__ename__ != null) return true; else null;
+		if(o != null) {
+			if(typeof(cl) == "function") {
+				if(o instanceof cl) {
+					if(cl == Array) return o.__enum__ == null;
+					return true;
+				}
+				if(js.Boot.__interfLoop(o.__class__,cl)) return true;
+			}
+		} else return false;
+		if(cl == Class && o.__name__ != null) return true;
+		if(cl == Enum && o.__ename__ != null) return true;
 		return o.__enum__ == cl;
 	}
 }
@@ -1715,8 +1718,8 @@ storage.UnblockState.prototype = {
 	,__class__: storage.UnblockState
 }
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
-var $_;
-function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
+var $_, $fid = 0;
+function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; };
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -1770,3 +1773,5 @@ storage.LocalStorageKey.BLACKLIST = "blacklist";
 storage.LocalStorageKey.BLACKLIST_USE_REGEXP = "blacklistUseRegexp";
 storage.LocalStorageKey.LATER_LIST = "laterList";
 Option.main();
+
+//@ sourceMappingURL=option.js.map

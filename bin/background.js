@@ -129,6 +129,8 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 }
+var IMap = $hxClasses["IMap"] = function() { }
+IMap.__name__ = true;
 var Note = $hxClasses["Note"] = function() {
 };
 Note.__name__ = true;
@@ -156,7 +158,7 @@ Reflect.fields = function(o) {
 	if(o != null) {
 		var hasOwnProperty = Object.prototype.hasOwnProperty;
 		for( var f in o ) {
-		if(f != "__id__" && hasOwnProperty.call(o,f)) a.push(f);
+		if(f != "__id__" && f != "hx__closures__" && hasOwnProperty.call(o,f)) a.push(f);
 		}
 	}
 	return a;
@@ -636,8 +638,8 @@ haxe.Json.prototype = {
 			this.buf.b += "\"<fun>\"";
 			break;
 		case 6:
-			var _g_eTClass_0 = $e[2];
-			if(_g_eTClass_0 == String) this.quote(v); else if(_g_eTClass_0 == Array) {
+			var c = $e[2];
+			if(c == String) this.quote(v); else if(c == Array) {
 				var v1 = v;
 				this.buf.b += "[";
 				var len = v1.length;
@@ -650,7 +652,7 @@ haxe.Json.prototype = {
 					}
 				}
 				this.buf.b += "]";
-			} else if(_g_eTClass_0 == haxe.ds.StringMap) {
+			} else if(c == haxe.ds.StringMap) {
 				var v1 = v;
 				var o = { };
 				var $it0 = v1.keys();
@@ -707,6 +709,7 @@ haxe.ds.StringMap = $hxClasses["haxe.ds.StringMap"] = function() {
 	this.h = { };
 };
 haxe.ds.StringMap.__name__ = true;
+haxe.ds.StringMap.__interfaces__ = [IMap];
 haxe.ds.StringMap.prototype = {
 	keys: function() {
 		var a = [];
@@ -807,30 +810,30 @@ js.Boot.__interfLoop = function(cc,cl) {
 	return js.Boot.__interfLoop(cc.__super__,cl);
 }
 js.Boot.__instanceof = function(o,cl) {
-	try {
-		if(o instanceof cl) {
-			if(cl == Array) return o.__enum__ == null;
-			return true;
-		}
-		if(js.Boot.__interfLoop(o.__class__,cl)) return true;
-	} catch( e ) {
-		if(cl == null) return false;
-	}
+	if(cl == null) return false;
 	switch(cl) {
 	case Int:
-		return Math.ceil(o%2147483648.0) === o;
+		return (o|0) === o;
 	case Float:
 		return typeof(o) == "number";
 	case Bool:
-		return o === true || o === false;
+		return typeof(o) == "boolean";
 	case String:
 		return typeof(o) == "string";
 	case Dynamic:
 		return true;
 	default:
-		if(o == null) return false;
-		if(cl == Class && o.__name__ != null) return true; else null;
-		if(cl == Enum && o.__ename__ != null) return true; else null;
+		if(o != null) {
+			if(typeof(cl) == "function") {
+				if(o instanceof cl) {
+					if(cl == Array) return o.__enum__ == null;
+					return true;
+				}
+				if(js.Boot.__interfLoop(o.__class__,cl)) return true;
+			}
+		} else return false;
+		if(cl == Class && o.__name__ != null) return true;
+		if(cl == Enum && o.__ename__ != null) return true;
 		return o.__enum__ == cl;
 	}
 }
@@ -1229,8 +1232,8 @@ storage.UnblockState.prototype = {
 	,__class__: storage.UnblockState
 }
 function $iterator(o) { if( o instanceof Array ) return function() { return HxOverrides.iter(o); }; return typeof(o.iterator) == 'function' ? $bind(o,o.iterator) : o.iterator; };
-var $_;
-function $bind(o,m) { var f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; return f; };
+var $_, $fid = 0;
+function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; };
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -1276,3 +1279,5 @@ storage.LocalStorageKey.BLACKLIST = "blacklist";
 storage.LocalStorageKey.BLACKLIST_USE_REGEXP = "blacklistUseRegexp";
 storage.LocalStorageKey.LATER_LIST = "laterList";
 Background.main();
+
+//@ sourceMappingURL=background.js.map

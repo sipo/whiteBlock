@@ -3,6 +3,7 @@
 -cp src
 -lib chrome-extension
 -D js-classic
+-debug
 
 --next
 
@@ -11,6 +12,7 @@
 -cp src
 -lib chrome-extension
 -D js-classic
+-debug
 
 --next
 
@@ -19,6 +21,7 @@
 -cp src
 -lib chrome-extension
 -D js-classic
+-debug
 
 --next
 
@@ -27,3 +30,4 @@
 -cp src
 -lib chrome-extension
 -D js-classic
+-debug

@@ -13,7 +13,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
     <orderEntry type="library" exported="" name="lib" level="project" />
-    <orderEntry type="jdk" jdkName="haXe 3.0 RC" jdkType="haXe SDK" />
+    <orderEntry type="jdk" jdkName="haXe 3.0" jdkType="haXe SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
