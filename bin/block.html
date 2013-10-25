@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
     <head>
         <meta charset="utf-8" />
@@ -11,20 +11,23 @@
         <p id="targetPage"><a href="::urlFull::">::title::(::urlShort::)</a></p>
         <h2>以下から動作を選んで下さい。</h2>
         <section>
-            <h1>あとで見るリストに追加する<small>（推奨）</small></h1>
-            <p><strong><a href="javascript:void(0);" id="addLaterList">追加する</a></strong></p>
-            <p id="addLaterListComplete">追加しました<!-- [<a href="#" id="addLaterListClose">閉じる</a>]--></p>
-            <p><small>ヒント：仕事中はこちらを使いましょう。拡張機能のアイコンをクリックすると追加したリストを確認できます。</small></p>
-        </section>
-        <section>
             <h1>少しだけブロックを解除する</h1>
-            <p>
+            <p class="hide">
                 <label for="unblockTime">解除する時間</label>
                 <select id="unblockTime" name="unblockTime"><option value="::time::">::text::</option></select>
                 <a href="javascript:void(0);" id="unblock">解除する</a>
             </p>
+            <p>
+                解除するには、拡張機能アイコンを使用してください
+            </p>
             <p id="blockTime"><small>最後に解除したのは::time::前です</small></p>
             <p id="todayUnblockTotal"><small>今日は::time::解除しています</small></p>
+        </section>
+        <section>
+            <h1>あとで見るリストに追加する<small>（推奨）</small></h1>
+            <p><a href="javascript:void(0);" id="addLaterList" class="strongButton">追加する</a></p>
+            <p id="addLaterListComplete">追加しました<!-- [<a href="#" id="addLaterListClose">閉じる</a>]--></p>
+            <p><small>ヒント：仕事中はこちらを使いましょう。拡張機能のアイコンをクリックすると追加したリストを確認できます。</small></p>
         </section>
         <section>
             <h1>ホワイトリストに追加する</h1>
